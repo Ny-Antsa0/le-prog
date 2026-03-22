@@ -1,12 +1,17 @@
 namespace jdPoint;
 
+using System.Text.Json;
+using Npgsql;
+
 public partial class Form1 : Form
 {
+    private const string DefaultConnectionString = "Host=localhost;Port=5432;Username=postgres;Password=8889;Database=point";
     private int _columns = 10;
     private int _rows = 10;
     private readonly Dictionary<Point, bool> _points = new();
     private bool _usePrimaryColorNext = true;
     private bool _isGameOver;
+    private bool _isApplyingLoadedState;
 
     public Form1()
     {
@@ -14,6 +19,19 @@ public partial class Form1 : Form
         numColumns.ValueChanged += GridValueChanged;
         numRows.ValueChanged += GridValueChanged;
         pnlGrid.Resize += GridPanelResize;
+        Shown += Form1_Shown;
+    }
+
+    private void Form1_Shown(object? sender, EventArgs e)
+    {
+        try
+        {
+            EnsureDatabaseObjects();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Connexion PostgreSQL impossible. Verifie la chaine de connexion.\n\n{ex.Message}", "Base de donnees", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
     }
 
     private void btnApply_Click(object sender, EventArgs e)
@@ -23,6 +41,11 @@ public partial class Form1 : Form
 
     private void GridValueChanged(object? sender, EventArgs e)
     {
+        if (_isApplyingLoadedState)
+        {
+            return;
+        }
+
         UpdateGridDimensions();
     }
 
@@ -41,6 +64,133 @@ public partial class Form1 : Form
     private void btnRestart_Click(object sender, EventArgs e)
     {
         RestartGame();
+    }
+
+    private void btnSave_Click(object sender, EventArgs e)
+    {
+        string saveName = txtSaveName.Text.Trim();
+        if (string.IsNullOrWhiteSpace(saveName))
+        {
+            MessageBox.Show("Donne un nom de sauvegarde.", "Sauvegarde", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        try
+        {
+            EnsureDatabaseObjects();
+
+            List<PointState> serializedPoints = _points
+                .Select(entry => new PointState(entry.Key.X, entry.Key.Y, entry.Value))
+                .ToList();
+
+            string pointsJson = JsonSerializer.Serialize(serializedPoints);
+
+            using var connection = new NpgsqlConnection(GetConnectionString());
+            connection.Open();
+
+            using var command = new NpgsqlCommand(@"
+INSERT INTO game_saves(save_name, columns_count, rows_count, points_json, use_primary_color_next, is_game_over, updated_at)
+VALUES (@save_name, @columns_count, @rows_count, @points_json::jsonb, @use_primary_color_next, @is_game_over, NOW())
+ON CONFLICT (save_name) DO UPDATE
+SET columns_count = EXCLUDED.columns_count,
+    rows_count = EXCLUDED.rows_count,
+    points_json = EXCLUDED.points_json,
+    use_primary_color_next = EXCLUDED.use_primary_color_next,
+    is_game_over = EXCLUDED.is_game_over,
+    updated_at = NOW();", connection);
+
+            command.Parameters.AddWithValue("save_name", saveName);
+            command.Parameters.AddWithValue("columns_count", _columns);
+            command.Parameters.AddWithValue("rows_count", _rows);
+            command.Parameters.AddWithValue("points_json", pointsJson);
+            command.Parameters.AddWithValue("use_primary_color_next", _usePrimaryColorNext);
+            command.Parameters.AddWithValue("is_game_over", _isGameOver);
+
+            command.ExecuteNonQuery();
+            MessageBox.Show("Partie sauvegardee.", "Sauvegarde", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Echec de la sauvegarde.\n\n{ex.Message}", "Sauvegarde", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private void btnLoad_Click(object sender, EventArgs e)
+    {
+        string saveName = txtSaveName.Text.Trim();
+        if (string.IsNullOrWhiteSpace(saveName))
+        {
+            MessageBox.Show("Donne un nom de sauvegarde.", "Chargement", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        try
+        {
+            EnsureDatabaseObjects();
+
+            using var connection = new NpgsqlConnection(GetConnectionString());
+            connection.Open();
+
+            using var command = new NpgsqlCommand(@"
+SELECT columns_count, rows_count, points_json::text, use_primary_color_next, is_game_over
+FROM game_saves
+WHERE save_name = @save_name;", connection);
+            command.Parameters.AddWithValue("save_name", saveName);
+
+            using var reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                MessageBox.Show("Aucune sauvegarde trouvee avec ce nom.", "Chargement", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            int loadedColumns = reader.GetInt32(0);
+            int loadedRows = reader.GetInt32(1);
+            string pointsJson = reader.GetString(2);
+            bool loadedUsePrimaryColorNext = reader.GetBoolean(3);
+            bool loadedIsGameOver = reader.GetBoolean(4);
+
+            List<PointState>? loadedPoints = JsonSerializer.Deserialize<List<PointState>>(pointsJson);
+            if (loadedPoints is null)
+            {
+                loadedPoints = new List<PointState>();
+            }
+
+            _isApplyingLoadedState = true;
+            try
+            {
+                numColumns.Value = Math.Clamp(loadedColumns, (int)numColumns.Minimum, (int)numColumns.Maximum);
+                numRows.Value = Math.Clamp(loadedRows, (int)numRows.Minimum, (int)numRows.Maximum);
+            }
+            finally
+            {
+                _isApplyingLoadedState = false;
+            }
+
+            _columns = (int)numColumns.Value;
+            _rows = (int)numRows.Value;
+            _points.Clear();
+
+            foreach (PointState point in loadedPoints)
+            {
+                if (point.X < 0 || point.X >= _columns || point.Y < 0 || point.Y >= _rows)
+                {
+                    continue;
+                }
+
+                _points[new Point(point.X, point.Y)] = point.IsPrimary;
+            }
+
+            _usePrimaryColorNext = loadedUsePrimaryColorNext;
+            _isGameOver = loadedIsGameOver;
+
+            pnlGrid.Invalidate();
+            MessageBox.Show("Partie chargee.", "Chargement", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Echec du chargement.\n\n{ex.Message}", "Chargement", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     private void RestartGame()
@@ -179,4 +329,31 @@ public partial class Form1 : Form
             graphics.FillEllipse(brush, centerX - pointRadius, centerY - pointRadius, pointDiameter, pointDiameter);
         }
     }
+
+    private string GetConnectionString()
+    {
+        return Environment.GetEnvironmentVariable("JDPOINT_CONNECTION_STRING") ?? DefaultConnectionString;
+    }
+
+    private void EnsureDatabaseObjects()
+    {
+        using var connection = new NpgsqlConnection(GetConnectionString());
+        connection.Open();
+
+        using var command = new NpgsqlCommand(@"
+CREATE TABLE IF NOT EXISTS game_saves
+(
+    save_name TEXT PRIMARY KEY,
+    columns_count INTEGER NOT NULL,
+    rows_count INTEGER NOT NULL,
+    points_json JSONB NOT NULL,
+    use_primary_color_next BOOLEAN NOT NULL,
+    is_game_over BOOLEAN NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);", connection);
+
+        command.ExecuteNonQuery();
+    }
+
+    private sealed record PointState(int X, int Y, bool IsPrimary);
 }

@@ -1,8 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "7uVQt2uZiII=",
+  "dgSpecHash": "dTVjFyBsOBM=",
   "success": true,
-  "projectFilePath": "C:\\Users\\zaka\\Documents\\s5\\Prog\\s4\\point\\jdPoint\\jdPoint.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "C:\\Users\\zaka\\Documents\\GitHub\\le-prog\\jdPoint\\jdPoint.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\zaka\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.0\\microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",
+    "C:\\Users\\zaka\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.0\\microsoft.extensions.logging.abstractions.8.0.0.nupkg.sha512",
+    "C:\\Users\\zaka\\.nuget\\packages\\npgsql\\8.0.6\\npgsql.8.0.6.nupkg.sha512"
+  ],
   "logs": []
 }

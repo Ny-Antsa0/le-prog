@@ -36,6 +36,10 @@ partial class Form1
         this.numRows = new System.Windows.Forms.NumericUpDown();
         this.btnApply = new System.Windows.Forms.Button();
         this.btnRestart = new System.Windows.Forms.Button();
+        this.lblSaveName = new System.Windows.Forms.Label();
+        this.txtSaveName = new System.Windows.Forms.TextBox();
+        this.btnSave = new System.Windows.Forms.Button();
+        this.btnLoad = new System.Windows.Forms.Button();
         ((System.ComponentModel.ISupportInitialize)(this.numColumns)).BeginInit();
         ((System.ComponentModel.ISupportInitialize)(this.numRows)).BeginInit();
         this.SuspendLayout();
@@ -47,9 +51,9 @@ partial class Form1
         | System.Windows.Forms.AnchorStyles.Right)));
         this.pnlGrid.BackColor = System.Drawing.Color.White;
         this.pnlGrid.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-        this.pnlGrid.Location = new System.Drawing.Point(12, 56);
+        this.pnlGrid.Location = new System.Drawing.Point(12, 88);
         this.pnlGrid.Name = "pnlGrid";
-        this.pnlGrid.Size = new System.Drawing.Size(776, 382);
+        this.pnlGrid.Size = new System.Drawing.Size(956, 350);
         this.pnlGrid.TabIndex = 0;
         this.pnlGrid.Paint += new System.Windows.Forms.PaintEventHandler(this.pnlGrid_Paint);
         this.pnlGrid.MouseClick += new System.Windows.Forms.MouseEventHandler(this.pnlGrid_MouseClick);
@@ -135,8 +139,49 @@ partial class Form1
         this.btnRestart.Text = "Recommencer";
         this.btnRestart.UseVisualStyleBackColor = true;
         this.btnRestart.Click += new System.EventHandler(this.btnRestart_Click);
+        // 
+        // lblSaveName
+        // 
+        this.lblSaveName.AutoSize = true;
+        this.lblSaveName.Location = new System.Drawing.Point(12, 58);
+        this.lblSaveName.Name = "lblSaveName";
+        this.lblSaveName.Size = new System.Drawing.Size(87, 15);
+        this.lblSaveName.TabIndex = 7;
+        this.lblSaveName.Text = "Nom partie :";
+        // 
+        // txtSaveName
+        // 
+        this.txtSaveName.Location = new System.Drawing.Point(105, 55);
+        this.txtSaveName.Name = "txtSaveName";
+        this.txtSaveName.Size = new System.Drawing.Size(365, 23);
+        this.txtSaveName.TabIndex = 8;
+        this.txtSaveName.Text = "partie1";
+        // 
+        // btnSave
+        // 
+        this.btnSave.Location = new System.Drawing.Point(500, 54);
+        this.btnSave.Name = "btnSave";
+        this.btnSave.Size = new System.Drawing.Size(120, 25);
+        this.btnSave.TabIndex = 9;
+        this.btnSave.Text = "Sauvegarder";
+        this.btnSave.UseVisualStyleBackColor = true;
+        this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
+        // 
+        // btnLoad
+        // 
+        this.btnLoad.Location = new System.Drawing.Point(640, 54);
+        this.btnLoad.Name = "btnLoad";
+        this.btnLoad.Size = new System.Drawing.Size(120, 25);
+        this.btnLoad.TabIndex = 10;
+        this.btnLoad.Text = "Charger";
+        this.btnLoad.UseVisualStyleBackColor = true;
+        this.btnLoad.Click += new System.EventHandler(this.btnLoad_Click);
         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-        this.ClientSize = new System.Drawing.Size(800, 450);
+        this.ClientSize = new System.Drawing.Size(980, 450);
+        this.Controls.Add(this.btnLoad);
+        this.Controls.Add(this.btnSave);
+        this.Controls.Add(this.txtSaveName);
+        this.Controls.Add(this.lblSaveName);
         this.Controls.Add(this.btnRestart);
         this.Controls.Add(this.btnApply);
         this.Controls.Add(this.numRows);
@@ -163,4 +208,8 @@ partial class Form1
     private System.Windows.Forms.NumericUpDown numRows;
     private System.Windows.Forms.Button btnApply;
     private System.Windows.Forms.Button btnRestart;
+    private System.Windows.Forms.Label lblSaveName;
+    private System.Windows.Forms.TextBox txtSaveName;
+    private System.Windows.Forms.Button btnSave;
+    private System.Windows.Forms.Button btnLoad;
 }
