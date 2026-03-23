@@ -1,0 +1,25 @@
+Projet: Jeu de points
+
+Objectif: 
+Creer un jeu qui se joue entre 2 joueur. Un jeu tour par tour qui se joue sur une grille de taille n
+ou n est un nombre saisie par l'utilisateur dans l'accueil
+N.B: Le grille ne doit pas etre de taille inferieur a 5 ou depasse 20
+
+Regle principale:
+Le regle c'est simple, un joueur gagne un point s'il arrive a aligner 5 points horizontalement, verticalement ou
+obliquement sans sortir du grille de jeu, et sans chevauchement entre les points pose par les joueurs
+
+Regle specifique:
+Chacun des joueur possede un barre pour lancer des missiles. A chaque tour, l'utilisateur choisit entre tirer une missile
+ou poser un point. Si le joueur choisit de tirer un missile, il choisit l'axe des ordonnees ou il veux viser(ex: 3eme ligne)
+puis il choisit un nombre un puissance qui varie entre 1 et 9. Lorsque le joueur lance le missile, la colonne auquelle 
+la missile doit y tomber depend de la puissance et de la taille de la grille, c-a-d que ce colonne doit etre le rapport 
+etre la puissance et la taille du grille
+ex: taille du grille = 18, si le joueur a choisit 1 comme puissance, logiquement la colonne ou la missile doit arriver est
+(18 * 1) / 9 = 2 eme case.
+
+Apres qu'une missile a touche une colonne, le point posé sur la grille disparait.
+
+N.B: Si on tombe sur des nombre decimale, on prend toujours la partie entiere meme si le nbr est par exemple 2,95, on 
+considere que le nbr de case est alors le 2eme. De plus, si un joueur a deja aligner 5 points auparavant, les points alignes 
+devient invulnerable au missile 
