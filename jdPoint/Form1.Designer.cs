@@ -40,6 +40,33 @@ partial class Form1
         this.txtSaveName = new System.Windows.Forms.TextBox();
         this.btnSave = new System.Windows.Forms.Button();
         this.btnLoad = new System.Windows.Forms.Button();
+        this.lblCurrentPlayer = new System.Windows.Forms.Label();
+        this.lblCurrentPlayerValue = new System.Windows.Forms.Label();
+        this.lblMissilesPrimary = new System.Windows.Forms.Label();
+        this.lblMissilesPrimaryValue = new System.Windows.Forms.Label();
+        this.lblMissilesSecondary = new System.Windows.Forms.Label();
+        this.lblMissilesSecondaryValue = new System.Windows.Forms.Label();
+        this.lblMissilesConfig = new System.Windows.Forms.Label();
+        this.numMissilesPrimary = new System.Windows.Forms.NumericUpDown();
+        this.lblMissilesConfigSeparator = new System.Windows.Forms.Label();
+        this.numMissilesSecondary = new System.Windows.Forms.NumericUpDown();
+        this.lblMissilePower = new System.Windows.Forms.Label();
+        this.numMissilePower = new System.Windows.Forms.NumericUpDown();
+        this.lblMissileTargetColumn = new System.Windows.Forms.Label();
+        this.numMissileTargetColumn = new System.Windows.Forms.NumericUpDown();
+        this.lblMissileTargetRow = new System.Windows.Forms.Label();
+        this.numMissileTargetRow = new System.Windows.Forms.NumericUpDown();
+        this.btnFireMissile = new System.Windows.Forms.Button();
+        ((System.ComponentModel.ISupportInitialize)(this.numMissilePower)).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)(this.numMissileTargetColumn)).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)(this.numMissileTargetRow)).BeginInit();
+        this.grpAction = new System.Windows.Forms.GroupBox();
+        this.rdoActionMissile = new System.Windows.Forms.RadioButton();
+        this.rdoActionPlace = new System.Windows.Forms.RadioButton();
+        this.lblActionHint = new System.Windows.Forms.Label();
+        ((System.ComponentModel.ISupportInitialize)(this.numMissilesPrimary)).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)(this.numMissilesSecondary)).BeginInit();
+        this.grpAction.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)(this.numColumns)).BeginInit();
         ((System.ComponentModel.ISupportInitialize)(this.numRows)).BeginInit();
         this.SuspendLayout();
@@ -51,9 +78,9 @@ partial class Form1
         | System.Windows.Forms.AnchorStyles.Right)));
         this.pnlGrid.BackColor = System.Drawing.Color.White;
         this.pnlGrid.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-        this.pnlGrid.Location = new System.Drawing.Point(12, 88);
+        this.pnlGrid.Location = new System.Drawing.Point(12, 162);
         this.pnlGrid.Name = "pnlGrid";
-        this.pnlGrid.Size = new System.Drawing.Size(956, 350);
+        this.pnlGrid.Size = new System.Drawing.Size(956, 276);
         this.pnlGrid.TabIndex = 0;
         this.pnlGrid.Paint += new System.Windows.Forms.PaintEventHandler(this.pnlGrid_Paint);
         this.pnlGrid.MouseClick += new System.Windows.Forms.MouseEventHandler(this.pnlGrid_MouseClick);
@@ -176,8 +203,257 @@ partial class Form1
         this.btnLoad.Text = "Charger";
         this.btnLoad.UseVisualStyleBackColor = true;
         this.btnLoad.Click += new System.EventHandler(this.btnLoad_Click);
+        // 
+        // lblCurrentPlayer
+        // 
+        this.lblCurrentPlayer.AutoSize = true;
+        this.lblCurrentPlayer.Location = new System.Drawing.Point(12, 98);
+        this.lblCurrentPlayer.Name = "lblCurrentPlayer";
+        this.lblCurrentPlayer.Size = new System.Drawing.Size(0, 15);
+        this.lblCurrentPlayer.TabIndex = 11;
+        this.lblCurrentPlayer.Text = "";
+        // 
+        // lblCurrentPlayerValue
+        // 
+        this.lblCurrentPlayerValue.AutoSize = true;
+        this.lblCurrentPlayerValue.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+        this.lblCurrentPlayerValue.Location = new System.Drawing.Point(12, 98);
+        this.lblCurrentPlayerValue.Name = "lblCurrentPlayerValue";
+        this.lblCurrentPlayerValue.Size = new System.Drawing.Size(20, 15);
+        this.lblCurrentPlayerValue.TabIndex = 12;
+        this.lblCurrentPlayerValue.Text = "R";
+        // 
+        // lblMissilesPrimary
+        // 
+        this.lblMissilesPrimary.AutoSize = true;
+        this.lblMissilesPrimary.Location = new System.Drawing.Point(12, 121);
+        this.lblMissilesPrimary.Name = "lblMissilesPrimary";
+        this.lblMissilesPrimary.Size = new System.Drawing.Size(40, 15);
+        this.lblMissilesPrimary.TabIndex = 13;
+        this.lblMissilesPrimary.Text = "R. :";
+        // 
+        // lblMissilesPrimaryValue
+        // 
+        this.lblMissilesPrimaryValue.AutoSize = true;
+        this.lblMissilesPrimaryValue.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+        this.lblMissilesPrimaryValue.Location = new System.Drawing.Point(55, 121);
+        this.lblMissilesPrimaryValue.Name = "lblMissilesPrimaryValue";
+        this.lblMissilesPrimaryValue.Size = new System.Drawing.Size(14, 15);
+        this.lblMissilesPrimaryValue.TabIndex = 14;
+        this.lblMissilesPrimaryValue.Text = "3";
+        // 
+        // lblMissilesSecondary
+        // 
+        this.lblMissilesSecondary.AutoSize = true;
+        this.lblMissilesSecondary.Location = new System.Drawing.Point(75, 121);
+        this.lblMissilesSecondary.Name = "lblMissilesSecondary";
+        this.lblMissilesSecondary.Size = new System.Drawing.Size(31, 15);
+        this.lblMissilesSecondary.TabIndex = 15;
+        this.lblMissilesSecondary.Text = "B. :";
+        // 
+        // lblMissilesSecondaryValue
+        // 
+        this.lblMissilesSecondaryValue.AutoSize = true;
+        this.lblMissilesSecondaryValue.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+        this.lblMissilesSecondaryValue.Location = new System.Drawing.Point(108, 121);
+        this.lblMissilesSecondaryValue.Name = "lblMissilesSecondaryValue";
+        this.lblMissilesSecondaryValue.Size = new System.Drawing.Size(14, 15);
+        this.lblMissilesSecondaryValue.TabIndex = 16;
+        this.lblMissilesSecondaryValue.Text = "3";
+        // 
+        // lblMissilesConfig
+        // 
+        this.lblMissilesConfig.AutoSize = true;
+        this.lblMissilesConfig.Location = new System.Drawing.Point(620, 98);
+        this.lblMissilesConfig.Name = "lblMissilesConfig";
+        this.lblMissilesConfig.Size = new System.Drawing.Size(60, 15);
+        this.lblMissilesConfig.TabIndex = 17;
+        this.lblMissilesConfig.Text = "Stock:";
+        // 
+        // numMissilesPrimary
+        // 
+        this.numMissilesPrimary.Location = new System.Drawing.Point(780, 95);
+        this.numMissilesPrimary.Maximum = new decimal(new int[] {
+        99,
+        0,
+        0,
+        0});
+        this.numMissilesPrimary.Name = "numMissilesPrimary";
+        this.numMissilesPrimary.Size = new System.Drawing.Size(53, 23);
+        this.numMissilesPrimary.TabIndex = 18;
+        this.numMissilesPrimary.Value = new decimal(new int[] {
+        3,
+        0,
+        0,
+        0});
+        // 
+        // lblMissilesConfigSeparator
+        // 
+        this.lblMissilesConfigSeparator.AutoSize = true;
+        this.lblMissilesConfigSeparator.Location = new System.Drawing.Point(839, 98);
+        this.lblMissilesConfigSeparator.Name = "lblMissilesConfigSeparator";
+        this.lblMissilesConfigSeparator.Size = new System.Drawing.Size(12, 15);
+        this.lblMissilesConfigSeparator.TabIndex = 19;
+        this.lblMissilesConfigSeparator.Text = "/";
+        // 
+        // numMissilesSecondary
+        // 
+        this.numMissilesSecondary.Location = new System.Drawing.Point(857, 95);
+        this.numMissilesSecondary.Maximum = new decimal(new int[] {
+        99,
+        0,
+        0,
+        0});
+        this.numMissilesSecondary.Name = "numMissilesSecondary";
+        this.numMissilesSecondary.Size = new System.Drawing.Size(53, 23);
+        this.numMissilesSecondary.TabIndex = 20;
+        this.numMissilesSecondary.Value = new decimal(new int[] {
+        3,
+        0,
+        0,
+        0});
+        // 
+        // lblMissilePower
+        // 
+        this.lblMissilePower.AutoSize = true;
+        this.lblMissilePower.Location = new System.Drawing.Point(620, 130);
+        this.lblMissilePower.Name = "lblMissilePower";
+        this.lblMissilePower.Size = new System.Drawing.Size(20, 15);
+        this.lblMissilePower.TabIndex = 21;
+        this.lblMissilePower.Text = "P:";
+        // 
+        // numMissilePower
+        // 
+        this.numMissilePower.DecimalPlaces = 1;
+        this.numMissilePower.Increment = new decimal(new int[] {
+        1,
+        0,
+        0,
+        65536});
+        this.numMissilePower.Location = new System.Drawing.Point(703, 128);
+        this.numMissilePower.Maximum = new decimal(new int[] {
+        9,
+        0,
+        0,
+        0});
+        this.numMissilePower.Minimum = new decimal(new int[] {
+        1,
+        0,
+        0,
+        0});
+        this.numMissilePower.Name = "numMissilePower";
+        this.numMissilePower.Size = new System.Drawing.Size(63, 23);
+        this.numMissilePower.TabIndex = 22;
+        this.numMissilePower.Value = new decimal(new int[] {
+        5,
+        0,
+        0,
+        0});
+        // 
+        // lblMissileTargetColumn
+        // 
+        this.lblMissileTargetColumn.AutoSize = true;
+        this.lblMissileTargetColumn.Location = new System.Drawing.Point(712, 130);
+        this.lblMissileTargetColumn.Name = "lblMissileTargetColumn";
+        this.lblMissileTargetColumn.Size = new System.Drawing.Size(20, 15);
+        this.lblMissileTargetColumn.TabIndex = 23;
+        this.lblMissileTargetColumn.Text = "X:";
+        // 
+        // numMissileTargetColumn
+        // 
+        this.numMissileTargetColumn.Location = new System.Drawing.Point(734, 128);
+        this.numMissileTargetColumn.Name = "numMissileTargetColumn";
+        this.numMissileTargetColumn.Size = new System.Drawing.Size(45, 23);
+        this.numMissileTargetColumn.TabIndex = 24;
+        // 
+        // lblMissileTargetRow
+        // 
+        this.lblMissileTargetRow.AutoSize = true;
+        this.lblMissileTargetRow.Location = new System.Drawing.Point(785, 130);
+        this.lblMissileTargetRow.Name = "lblMissileTargetRow";
+        this.lblMissileTargetRow.Size = new System.Drawing.Size(20, 15);
+        this.lblMissileTargetRow.TabIndex = 25;
+        this.lblMissileTargetRow.Text = "Y:";
+        // 
+        // numMissileTargetRow
+        // 
+        this.numMissileTargetRow.Location = new System.Drawing.Point(807, 128);
+        this.numMissileTargetRow.Name = "numMissileTargetRow";
+        this.numMissileTargetRow.Size = new System.Drawing.Size(45, 23);
+        this.numMissileTargetRow.TabIndex = 26;
+        // 
+        // btnFireMissile
+        // 
+        this.btnFireMissile.Location = new System.Drawing.Point(858, 128);
+        this.btnFireMissile.Name = "btnFireMissile";
+        this.btnFireMissile.Size = new System.Drawing.Size(75, 23);
+        this.btnFireMissile.TabIndex = 27;
+        this.btnFireMissile.Text = "Tirer";
+        this.btnFireMissile.UseVisualStyleBackColor = true;
+        this.btnFireMissile.Click += new System.EventHandler(this.btnFireMissile_Click);
+        // 
+        // grpAction
+        // 
+        this.grpAction.Controls.Add(this.rdoActionMissile);
+        this.grpAction.Controls.Add(this.rdoActionPlace);
+        this.grpAction.Location = new System.Drawing.Point(320, 90);
+        this.grpAction.Name = "grpAction";
+        this.grpAction.Size = new System.Drawing.Size(274, 58);
+        this.grpAction.TabIndex = 24;
+        this.grpAction.TabStop = false;
+        this.grpAction.Text = "Action du tour";
+        // 
+        // rdoActionMissile
+        // 
+        this.rdoActionMissile.AutoSize = true;
+        this.rdoActionMissile.Location = new System.Drawing.Point(132, 24);
+        this.rdoActionMissile.Name = "rdoActionMissile";
+        this.rdoActionMissile.Size = new System.Drawing.Size(115, 19);
+        this.rdoActionMissile.TabIndex = 1;
+        this.rdoActionMissile.Text = "Lancer un missile";
+        this.rdoActionMissile.UseVisualStyleBackColor = true;
+        // 
+        // rdoActionPlace
+        // 
+        this.rdoActionPlace.AutoSize = true;
+        this.rdoActionPlace.Checked = true;
+        this.rdoActionPlace.Location = new System.Drawing.Point(15, 24);
+        this.rdoActionPlace.Name = "rdoActionPlace";
+        this.rdoActionPlace.Size = new System.Drawing.Size(90, 19);
+        this.rdoActionPlace.TabIndex = 0;
+        this.rdoActionPlace.TabStop = true;
+        this.rdoActionPlace.Text = "Poser un pion";
+        this.rdoActionPlace.UseVisualStyleBackColor = true;
+        // 
+        // lblActionHint
+        // 
+        this.lblActionHint.AutoSize = true;
+        this.lblActionHint.Location = new System.Drawing.Point(620, 112);
+        this.lblActionHint.Name = "lblActionHint";
+        this.lblActionHint.Size = new System.Drawing.Size(0, 0);
+        this.lblActionHint.TabIndex = 26;
+        this.lblActionHint.Text = "";
         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
         this.ClientSize = new System.Drawing.Size(980, 450);
+        this.Controls.Add(this.btnFireMissile);
+        this.Controls.Add(this.numMissileTargetRow);
+        this.Controls.Add(this.lblMissileTargetRow);
+        this.Controls.Add(this.numMissileTargetColumn);
+        this.Controls.Add(this.lblMissileTargetColumn);
+        this.Controls.Add(this.numMissilePower);
+        this.Controls.Add(this.lblMissilePower);
+        this.Controls.Add(this.numMissilesSecondary);
+        this.Controls.Add(this.lblMissilesConfigSeparator);
+        this.Controls.Add(this.numMissilesPrimary);
+        this.Controls.Add(this.lblMissilesConfig);
+        this.Controls.Add(this.lblActionHint);
+        this.Controls.Add(this.grpAction);
+        this.Controls.Add(this.lblMissilesSecondaryValue);
+        this.Controls.Add(this.lblMissilesSecondary);
+        this.Controls.Add(this.lblMissilesPrimaryValue);
+        this.Controls.Add(this.lblMissilesPrimary);
+        this.Controls.Add(this.lblCurrentPlayerValue);
+        this.Controls.Add(this.lblCurrentPlayer);
         this.Controls.Add(this.btnLoad);
         this.Controls.Add(this.btnSave);
         this.Controls.Add(this.txtSaveName);
@@ -193,6 +469,13 @@ partial class Form1
         this.Name = "Form1";
         this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
         this.Text = "Grille personnalisable";
+        ((System.ComponentModel.ISupportInitialize)(this.numMissilePower)).EndInit();
+        ((System.ComponentModel.ISupportInitialize)(this.numMissileTargetColumn)).EndInit();
+        ((System.ComponentModel.ISupportInitialize)(this.numMissileTargetRow)).EndInit();
+        ((System.ComponentModel.ISupportInitialize)(this.numMissilesPrimary)).EndInit();
+        ((System.ComponentModel.ISupportInitialize)(this.numMissilesSecondary)).EndInit();
+        this.grpAction.ResumeLayout(false);
+        this.grpAction.PerformLayout();
         ((System.ComponentModel.ISupportInitialize)(this.numColumns)).EndInit();
         ((System.ComponentModel.ISupportInitialize)(this.numRows)).EndInit();
         this.ResumeLayout(false);
@@ -212,4 +495,25 @@ partial class Form1
     private System.Windows.Forms.TextBox txtSaveName;
     private System.Windows.Forms.Button btnSave;
     private System.Windows.Forms.Button btnLoad;
+    private System.Windows.Forms.Label lblCurrentPlayer;
+    private System.Windows.Forms.Label lblCurrentPlayerValue;
+    private System.Windows.Forms.Label lblMissilesPrimary;
+    private System.Windows.Forms.Label lblMissilesPrimaryValue;
+    private System.Windows.Forms.Label lblMissilesSecondary;
+    private System.Windows.Forms.Label lblMissilesSecondaryValue;
+    private System.Windows.Forms.Label lblMissilesConfig;
+    private System.Windows.Forms.NumericUpDown numMissilesPrimary;
+    private System.Windows.Forms.Label lblMissilesConfigSeparator;
+    private System.Windows.Forms.NumericUpDown numMissilesSecondary;
+    private System.Windows.Forms.Label lblMissilePower;
+    private System.Windows.Forms.NumericUpDown numMissilePower;
+    private System.Windows.Forms.Label lblMissileTargetColumn;
+    private System.Windows.Forms.NumericUpDown numMissileTargetColumn;
+    private System.Windows.Forms.Label lblMissileTargetRow;
+    private System.Windows.Forms.NumericUpDown numMissileTargetRow;
+    private System.Windows.Forms.Button btnFireMissile;
+    private System.Windows.Forms.GroupBox grpAction;
+    private System.Windows.Forms.RadioButton rdoActionMissile;
+    private System.Windows.Forms.RadioButton rdoActionPlace;
+    private System.Windows.Forms.Label lblActionHint;
 }

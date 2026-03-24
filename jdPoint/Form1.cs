@@ -1,4 +1,4 @@
-namespace jdPoint;
+﻿namespace jdPoint;
 
 using System.Text.Json;
 using Npgsql;
@@ -12,6 +12,8 @@ public partial class Form1 : Form
     private bool _usePrimaryColorNext = true;
     private bool _isGameOver;
     private bool _isApplyingLoadedState;
+    private int _missilesPrimaryRemaining;
+    private int _missilesSecondaryRemaining;
 
     public Form1()
     {
@@ -19,7 +21,16 @@ public partial class Form1 : Form
         numColumns.ValueChanged += GridValueChanged;
         numRows.ValueChanged += GridValueChanged;
         pnlGrid.Resize += GridPanelResize;
+        rdoActionPlace.CheckedChanged += ActionModeChanged;
+        rdoActionMissile.CheckedChanged += ActionModeChanged;
+        numMissilesPrimary.ValueChanged += MissileStockConfigChanged;
+        numMissilesSecondary.ValueChanged += MissileStockConfigChanged;
         Shown += Form1_Shown;
+
+        lblMissilePower.Visible = false;
+        numMissilePower.Visible = false;
+
+        RestartGame();
     }
 
     private void Form1_Shown(object? sender, EventArgs e)
@@ -52,6 +63,22 @@ public partial class Form1 : Form
     private void GridPanelResize(object? sender, EventArgs e)
     {
         pnlGrid.Invalidate();
+    }
+
+    private void ActionModeChanged(object? sender, EventArgs e)
+    {
+        UpdateStatusIndicators();
+    }
+
+    private void MissileStockConfigChanged(object? sender, EventArgs e)
+    {
+        if (_points.Count > 0 && !_isGameOver)
+        {
+            return;
+        }
+
+        InitializeMissileStocksFromConfig();
+        UpdateStatusIndicators();
     }
 
     private void UpdateGridDimensions()
@@ -184,6 +211,10 @@ WHERE save_name = @save_name;", connection);
             _usePrimaryColorNext = loadedUsePrimaryColorNext;
             _isGameOver = loadedIsGameOver;
 
+            InitializeMissileStocksFromConfig();
+            SyncMissileTargetBounds();
+            UpdateStatusIndicators();
+
             pnlGrid.Invalidate();
             MessageBox.Show("Partie chargee.", "Chargement", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
@@ -193,17 +224,81 @@ WHERE save_name = @save_name;", connection);
         }
     }
 
+    private void btnFireMissile_Click(object? sender, EventArgs e)
+    {
+        if (_isGameOver)
+        {
+            MessageBox.Show("La partie est terminee.", "Missile", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        if (!rdoActionMissile.Checked)
+        {
+            MessageBox.Show("Selectionne d'abord l'action 'Lancer un missile'.", "Missile", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        int availableMissiles = _usePrimaryColorNext ? _missilesPrimaryRemaining : _missilesSecondaryRemaining;
+        if (availableMissiles <= 0)
+        {
+            string colorName = _usePrimaryColorNext ? "Rouge" : "Bleu";
+            MessageBox.Show($"{colorName} n'a plus de missiles.", "Missile", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        int targetColumn = (int)numMissileTargetColumn.Value;
+        int targetRowFromBottom = (int)numMissileTargetRow.Value;
+        int targetRow = (_rows - 1) - targetRowFromBottom;
+
+        if (targetColumn < 0 || targetColumn >= _columns || targetRow < 0 || targetRow >= _rows)
+        {
+            MessageBox.Show("La case cible est hors de la grille.", "Missile", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        bool removed = _points.Remove(new Point(targetColumn, targetRow));
+
+        if (_usePrimaryColorNext)
+        {
+            _missilesPrimaryRemaining--;
+        }
+        else
+        {
+            _missilesSecondaryRemaining--;
+        }
+
+        string shooter = _usePrimaryColorNext ? "Rouge" : "Bleu";
+        _usePrimaryColorNext = !_usePrimaryColorNext;
+
+        UpdateStatusIndicators();
+        pnlGrid.Invalidate();
+
+        MessageBox.Show(
+            $"{shooter} tire en X={targetColumn}, Y={targetRowFromBottom}. Pions retires: {(removed ? 1 : 0)}.",
+            "Missile",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information);
+    }
+
     private void RestartGame()
     {
         _points.Clear();
         _usePrimaryColorNext = true;
         _isGameOver = false;
+        InitializeMissileStocksFromConfig();
+        SyncMissileTargetBounds();
+        UpdateStatusIndicators();
         pnlGrid.Invalidate();
     }
 
     private void pnlGrid_MouseClick(object sender, MouseEventArgs e)
     {
         if (e.Button != MouseButtons.Left || _columns <= 0 || _rows <= 0 || _isGameOver)
+        {
+            return;
+        }
+
+        if (!rdoActionPlace.Checked)
         {
             return;
         }
@@ -245,7 +340,60 @@ WHERE save_name = @save_name;", connection);
 
         _usePrimaryColorNext = !_usePrimaryColorNext;
 
+        UpdateStatusIndicators();
         pnlGrid.Invalidate();
+    }
+
+    private void InitializeMissileStocksFromConfig()
+    {
+        _missilesPrimaryRemaining = (int)numMissilesPrimary.Value;
+        _missilesSecondaryRemaining = (int)numMissilesSecondary.Value;
+    }
+
+    private void SyncMissileTargetBounds()
+    {
+        decimal maxColumn = Math.Max(0, _columns - 1);
+        decimal maxRow = Math.Max(0, _rows - 1);
+
+        numMissileTargetColumn.Minimum = 0;
+        numMissileTargetColumn.Maximum = maxColumn;
+        if (numMissileTargetColumn.Value < numMissileTargetColumn.Minimum || numMissileTargetColumn.Value > numMissileTargetColumn.Maximum)
+        {
+            numMissileTargetColumn.Value = numMissileTargetColumn.Minimum;
+        }
+
+        numMissileTargetRow.Minimum = 0;
+        numMissileTargetRow.Maximum = maxRow;
+        if (numMissileTargetRow.Value < numMissileTargetRow.Minimum || numMissileTargetRow.Value > numMissileTargetRow.Maximum)
+        {
+            numMissileTargetRow.Value = numMissileTargetRow.Minimum;
+        }
+    }
+
+    private void UpdateStatusIndicators()
+    {
+        lblCurrentPlayerValue.Text = _usePrimaryColorNext ? "R" : "B";
+        lblMissilesPrimaryValue.Text = _missilesPrimaryRemaining.ToString();
+        lblMissilesSecondaryValue.Text = _missilesSecondaryRemaining.ToString();
+
+        bool missileMode = rdoActionMissile.Checked && !_isGameOver;
+        numMissileTargetColumn.Enabled = missileMode;
+        numMissileTargetRow.Enabled = missileMode;
+        btnFireMissile.Enabled = missileMode;
+
+        if (_isGameOver)
+        {
+            lblActionHint.Text = "Partie terminee. Clique sur Recommencer pour rejouer.";
+            return;
+        }
+
+        if (rdoActionMissile.Checked)
+        {
+            lblActionHint.Text = "Choisis X et Y puis clique sur Tirer.";
+            return;
+        }
+
+        lblActionHint.Text = "Clique sur la grille pour poser un pion.";
     }
 
     private bool HasFiveInRow(Point origin, bool playerColor)
