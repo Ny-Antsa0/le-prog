@@ -2,6 +2,8 @@ namespace jdPoint;
 
 using System.Text.Json;
 using Npgsql;
+using System.Threading;
+using System.Threading.Tasks;
 
 public partial class Form1 : Form
 {
@@ -13,6 +15,7 @@ public partial class Form1 : Form
     private bool _usePrimaryColorNext = true;
     private bool _isGameOver;
     private bool _isApplyingLoadedState;
+    private bool _isAIMode = false;
 
     public Form1()
     {
@@ -26,6 +29,8 @@ public partial class Form1 : Form
         rbPlacePoint.CheckedChanged += ActionSelectionChanged;
         rbFireMissile.CheckedChanged += ActionSelectionChanged;
         numPower.ValueChanged += MissileParametersChanged;
+        rbPvP.CheckedChanged += GameModeChanged;
+        rbPvAI.CheckedChanged += GameModeChanged;
         
         UpdateCurrentPlayerDisplay();
         UpdateMissileControls();
@@ -249,16 +254,28 @@ WHERE save_name = @save_name;", connection);
 
     private void UpdateCurrentPlayerDisplay()
     {
-        string playerName = _usePrimaryColorNext ? "Rouge" : "Bleu";
-        string action = rbPlacePoint.Checked ? "Poser" : "Missile";
-        lblCurrentPlayer.Text = $"Joueur {playerName} ({action})";
-        lblCurrentPlayer.ForeColor = _usePrimaryColorNext ? Color.Firebrick : Color.RoyalBlue;
+        if (_isAIMode)
+        {
+            string currentPlayer = _usePrimaryColorNext ? "🤖 IA (Rouge)" : "👤 Joueur (Bleu)";
+            string action = rbPlacePoint.Checked ? "Poser" : "Missile";
+            lblCurrentPlayer.Text = $"{currentPlayer} ({action})";
+            lblCurrentPlayer.ForeColor = _usePrimaryColorNext ? Color.Firebrick : Color.RoyalBlue;
+        }
+        else
+        {
+            string playerName = _usePrimaryColorNext ? "Rouge" : "Bleu";
+            string action = rbPlacePoint.Checked ? "Poser" : "Missile";
+            lblCurrentPlayer.Text = $"Joueur {playerName} ({action})";
+            lblCurrentPlayer.ForeColor = _usePrimaryColorNext ? Color.Firebrick : Color.RoyalBlue;
+        }
     }
 
     private void UpdateMissileControls()
     {
         bool missileMode = rbFireMissile.Checked;
-        grpMissile.Enabled = missileMode && !_isGameOver;
+        // En mode IA, seul le joueur (Bleu) peut utiliser les missiles, pas l'IA
+        bool canUseMissiles = missileMode && !_isGameOver && (!_isAIMode || !_usePrimaryColorNext);
+        grpMissile.Enabled = canUseMissiles;
         
         if (missileMode)
         {
@@ -269,6 +286,32 @@ WHERE save_name = @save_name;", connection);
             
             // Afficher les informations calculées
             lblTargetRow.Text = $"Ligne: {targetRow + 1}, Colonne: {targetColumn + 1}\n(puissance: {power})";
+        }
+    }
+
+    private void GameModeChanged(object? sender, EventArgs e)
+    {
+        _isAIMode = rbPvAI.Checked;
+        UpdateCurrentPlayerDisplay();
+        UpdateMissileControls();
+        
+        if (_isAIMode)
+        {
+            // Choisir aléatoirement qui commence en mode IA
+            Random rand = new Random();
+            bool aiStarts = rand.Next(2) == 0;
+            
+            if (aiStarts)
+            {
+                _usePrimaryColorNext = true; // IA joue en Rouge
+                MessageBox.Show("Mode Joueur vs IA activé!\nL'IA commence!", "Mode de jeu", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Task.Run(() => MakeAIMove()); // L'IA joue directement
+            }
+            else
+            {
+                _usePrimaryColorNext = false; // Joueur joue en Bleu
+                MessageBox.Show("Mode Joueur vs IA activé!\nVous commencez!", "Mode de jeu", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
     }
 
@@ -330,9 +373,144 @@ WHERE save_name = @save_name;", connection);
 
     private void SwitchPlayer()
     {
-        _usePrimaryColorNext = !_usePrimaryColorNext;
-        UpdateCurrentPlayerDisplay();
-        UpdateMissileControls();
+        if (_isAIMode)
+        {
+            // En mode IA, alterner entre joueur et IA
+            _usePrimaryColorNext = !_usePrimaryColorNext;
+            UpdateCurrentPlayerDisplay();
+            
+            // Si c'est le tour de l'IA (Rouge = true)
+            if (_usePrimaryColorNext)
+            {
+                Task.Run(() => MakeAIMove());
+            }
+        }
+        else
+        {
+            _usePrimaryColorNext = !_usePrimaryColorNext;
+            UpdateCurrentPlayerDisplay();
+            UpdateMissileControls();
+        }
+    }
+
+    private void MakeAIMove()
+    {
+        // Attendre un peu pour que l'interface se mette à jour
+        Thread.Sleep(500);
+        
+        this.Invoke(() =>
+        {
+            if (_isGameOver || !_isAIMode) return;
+
+            // Stratégie simple de l'IA
+            var availableMoves = GetAvailableMoves();
+            if (availableMoves.Count == 0) return;
+
+            // L'IA choisit aléatoirement entre poser un point ou tirer un missile
+            Random rand = new Random();
+            bool useMissile = rand.Next(2) == 0; // Utiliser missile si 50% de chance
+
+            if (useMissile)
+            {
+                // L'IA tire un missile
+                int power = rand.Next(1, 10); // Puissance aléatoire 1-9
+                int targetRow = CalculateTargetRow(power, _rows);
+                int targetColumn = CalculateTargetColumn(power, _columns);
+                var targetPoint = new Point(targetColumn, targetRow);
+
+                // Retirer le point s'il existe et n'est pas invulnérable
+                if (_points.ContainsKey(targetPoint) && !_invulnerablePoints.Contains(targetPoint))
+                {
+                    _points.Remove(targetPoint);
+                    MessageBox.Show($"L'IA tire un missile!\nPoint éliminé en ligne {targetRow + 1}, colonne {targetColumn + 1}.", "IA Missile", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show($"L'IA tire un missile!\nAucun point trouvé en ligne {targetRow + 1}, colonne {targetColumn + 1}.", "IA Missile", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            else
+            {
+                // L'IA pose un point
+                // Priorité: 1. Bloquer les alignements adverses 2. Créer des alignements 3. Au hasard
+                var bestMove = FindBestMove(availableMoves);
+                
+                if (bestMove.HasValue)
+                {
+                    ExecuteAIMove(bestMove.Value);
+                    return;
+                }
+            }
+
+            // Changer de joueur pour le prochain tour
+            SwitchPlayer();
+            pnlGrid.Invalidate();
+        });
+    }
+
+    private List<Point> GetAvailableMoves()
+    {
+        var moves = new List<Point>();
+        for (int x = 0; x < _columns; x++)
+        {
+            for (int y = 0; y < _rows; y++)
+            {
+                var point = new Point(x, y);
+                if (!_points.ContainsKey(point))
+                {
+                    moves.Add(point);
+                }
+            }
+        }
+        return moves;
+    }
+
+    private Point? FindBestMove(List<Point> availableMoves)
+    {
+        Random rand = new Random();
+        
+        // 1. Vérifier si l'IA peut bloquer un alignement adverse
+        foreach (var move in availableMoves)
+        {
+            _points[move] = false; // Simuler point adverse (Bleu = false)
+            if (HasFiveInRow(move, false))
+            {
+                _points.Remove(move); // Annuler la simulation
+                return move; // Bloquer l'adversaire est prioritaire
+            }
+            _points.Remove(move); // Annuler la simulation
+        }
+
+        // 2. Vérifier si l'IA peut créer un alignement
+        foreach (var move in availableMoves)
+        {
+            _points[move] = true; // Simuler point IA (Rouge = true)
+            if (HasFiveInRow(move, true))
+            {
+                _points.Remove(move); // Annuler la simulation
+                return move; // Créer un alignement est la deuxième priorité
+            }
+            _points.Remove(move); // Annuler la simulation
+        }
+
+        // 3. Sinon, jouer au hasard
+        return availableMoves[rand.Next(availableMoves.Count)];
+    }
+
+    private void ExecuteAIMove(Point move)
+    {
+        bool currentPlayerIsPrimary = _usePrimaryColorNext;
+        _points[move] = currentPlayerIsPrimary;
+
+        if (HasFiveInRow(move, currentPlayerIsPrimary))
+        {
+            MarkAlignedPointsAsInvulnerable(move, currentPlayerIsPrimary);
+            MessageBox.Show("L'IA a aligné 5 points !\nCes points sont maintenant invulnérables.", "IA", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        
+        // Changer de joueur pour le prochain tour
+        SwitchPlayer();
+        pnlGrid.Invalidate();
     }
 
     private void pnlGrid_MouseClick(object sender, MouseEventArgs e)
@@ -346,6 +524,12 @@ WHERE save_name = @save_name;", connection);
         if (!rbPlacePoint.Checked)
         {
             return;
+        }
+
+        // En mode IA, ne permettre que les coups du joueur (Bleu = false)
+        if (_isAIMode && _usePrimaryColorNext)
+        {
+            return; // C'est le tour de l'IA, le joueur ne peut pas jouer
         }
 
         float usableWidth = pnlGrid.ClientSize.Width - 1;
@@ -383,10 +567,11 @@ WHERE save_name = @save_name;", connection);
 
         if (HasFiveInRow(clickedCell, currentPlayerIsPrimary))
         {
-            _isGameOver = true;
+            // Marquer les points alignés comme invulnérables mais continuer le jeu
             MarkAlignedPointsAsInvulnerable(clickedCell, currentPlayerIsPrimary);
             string winnerName = currentPlayerIsPrimary ? "Rouge" : "Bleu";
-            MessageBox.Show($"{winnerName} gagne avec 5 points alignés !", "Partie terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show($"{winnerName} a aligné 5 points !\nCes points sont maintenant invulnérables aux missiles.", "Alignement", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            SwitchPlayer();
         }
         else
         {
