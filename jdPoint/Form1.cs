@@ -25,12 +25,40 @@ public partial class Form1 : Form
         rdoActionMissile.CheckedChanged += ActionModeChanged;
         numMissilesPrimary.ValueChanged += MissileStockConfigChanged;
         numMissilesSecondary.ValueChanged += MissileStockConfigChanged;
+
+        // Redraw preview when target changes
+        numMissileTargetColumn.ValueChanged += MissileTargetChanged;
+        numMissileTargetRow.ValueChanged += MissileTargetChanged;
+
         Shown += Form1_Shown;
 
         lblMissilePower.Visible = false;
         numMissilePower.Visible = false;
 
         RestartGame();
+    }
+
+    // -----------------------------------------------------------------------
+    // Calcule la colonne réelle à partir de X saisi entre 1 et 9.
+    // 1 = première colonne (gauche), 9 = dernière colonne (droite),
+    // et les valeurs du milieu sont réparties linéairement.
+    // -----------------------------------------------------------------------
+    private int ComputeTargetColumn()
+    {
+        if (_columns <= 1)
+        {
+            return 0;
+        }
+
+        double xInput = (double)numMissileTargetColumn.Value; // 1..9
+        double normalized = (xInput - 1.0) / 8.0; // 0..1
+        int col = (int)Math.Round(normalized * (_columns - 1), MidpointRounding.AwayFromZero);
+        return Math.Clamp(col, 0, _columns - 1);
+    }
+
+    private void MissileTargetChanged(object? sender, EventArgs e)
+    {
+        pnlGrid.Invalidate();
     }
 
     private void Form1_Shown(object? sender, EventArgs e)
@@ -68,6 +96,7 @@ public partial class Form1 : Form
     private void ActionModeChanged(object? sender, EventArgs e)
     {
         UpdateStatusIndicators();
+        pnlGrid.Invalidate();
     }
 
     private void MissileStockConfigChanged(object? sender, EventArgs e)
@@ -246,7 +275,8 @@ WHERE save_name = @save_name;", connection);
             return;
         }
 
-        int targetColumn = (int)numMissileTargetColumn.Value;
+        // Calcul de la colonne réelle depuis la valeur décimale 1-9
+        int targetColumn = ComputeTargetColumn();
         int targetRowFromBottom = (int)numMissileTargetRow.Value;
         int targetRow = (_rows - 1) - targetRowFromBottom;
 
@@ -274,7 +304,7 @@ WHERE save_name = @save_name;", connection);
         pnlGrid.Invalidate();
 
         MessageBox.Show(
-            $"{shooter} tire en X={targetColumn}, Y={targetRowFromBottom}. Pions retires: {(removed ? 1 : 0)}.",
+            $"{shooter} tire en X={numMissileTargetColumn.Value:0.0} → colonne {targetColumn}, Y={targetRowFromBottom}. Pions retires: {(removed ? 1 : 0)}.",
             "Missile",
             MessageBoxButtons.OK,
             MessageBoxIcon.Information);
@@ -352,16 +382,16 @@ WHERE save_name = @save_name;", connection);
 
     private void SyncMissileTargetBounds()
     {
-        decimal maxColumn = Math.Max(0, _columns - 1);
-        decimal maxRow = Math.Max(0, _rows - 1);
-
-        numMissileTargetColumn.Minimum = 0;
-        numMissileTargetColumn.Maximum = maxColumn;
-        if (numMissileTargetColumn.Value < numMissileTargetColumn.Minimum || numMissileTargetColumn.Value > numMissileTargetColumn.Maximum)
-        {
+        // X : repère utilisateur fixe de 1 à 9
+        numMissileTargetColumn.Minimum = 1;
+        numMissileTargetColumn.Maximum = 9;
+        if (numMissileTargetColumn.Value < numMissileTargetColumn.Minimum)
             numMissileTargetColumn.Value = numMissileTargetColumn.Minimum;
-        }
+        if (numMissileTargetColumn.Value > numMissileTargetColumn.Maximum)
+            numMissileTargetColumn.Value = numMissileTargetColumn.Maximum;
 
+        // Y : ligne depuis le bas, 0 à rows-1
+        decimal maxRow = Math.Max(0, _rows - 1);
         numMissileTargetRow.Minimum = 0;
         numMissileTargetRow.Maximum = maxRow;
         if (numMissileTargetRow.Value < numMissileTargetRow.Minimum || numMissileTargetRow.Value > numMissileTargetRow.Maximum)
@@ -389,7 +419,8 @@ WHERE save_name = @save_name;", connection);
 
         if (rdoActionMissile.Checked)
         {
-            lblActionHint.Text = "Choisis X et Y puis clique sur Tirer.";
+            int previewCol = ComputeTargetColumn();
+            // lblActionHint.Text = $"Choisis X (1,0-9,0) et Y puis Tirer.  → colonne {previewCol}";
             return;
         }
 
@@ -444,11 +475,41 @@ WHERE save_name = @save_name;", connection);
         var graphics = e.Graphics;
         graphics.Clear(Color.White);
 
-        float usableWidth = pnlGrid.ClientSize.Width - 1;
+        float usableWidth  = pnlGrid.ClientSize.Width  - 1;
         float usableHeight = pnlGrid.ClientSize.Height - 1;
-        float cellWidth = usableWidth / _columns;
-        float cellHeight = usableHeight / _rows;
+        float cellWidth    = usableWidth  / _columns;
+        float cellHeight   = usableHeight / _rows;
 
+        // --- Prévisualisation du missile (fond rouge translucide) ---
+        if (rdoActionMissile.Checked && !_isGameOver)
+        {
+            int previewCol        = ComputeTargetColumn();
+            int previewRowBottom  = (int)numMissileTargetRow.Value;
+            int previewRow        = (_rows - 1) - previewRowBottom;
+
+            if (previewCol >= 0 && previewCol < _columns && previewRow >= 0 && previewRow < _rows)
+            {
+                float px = previewCol  * cellWidth;
+                float py = previewRow  * cellHeight;
+
+                using var previewFill   = new SolidBrush(Color.FromArgb(80, Color.OrangeRed));
+                using var previewBorder = new Pen(Color.OrangeRed, 2f);
+
+                graphics.FillRectangle(previewFill,   px, py, cellWidth,  cellHeight);
+                graphics.DrawRectangle(previewBorder, px, py, cellWidth,  cellHeight);
+
+                // Croix de visée
+                float cx = px + cellWidth  / 2f;
+                float cy = py + cellHeight / 2f;
+                float arm = MathF.Min(cellWidth, cellHeight) * 0.3f;
+
+                using var crossPen = new Pen(Color.Red, 2f);
+                graphics.DrawLine(crossPen, cx - arm, cy, cx + arm, cy);
+                graphics.DrawLine(crossPen, cx, cy - arm, cx, cy + arm);
+            }
+        }
+
+        // --- Grille ---
         using var pen = new Pen(Color.DimGray, 1f);
 
         for (int x = 0; x <= _columns; x++)
@@ -463,17 +524,19 @@ WHERE save_name = @save_name;", connection);
             graphics.DrawLine(pen, 0, yPos, usableWidth, yPos);
         }
 
+        // --- Pions ---
         float pointDiameter = MathF.Max(4f, MathF.Min(cellWidth, cellHeight) * 0.45f);
-        float pointRadius = pointDiameter / 2f;
-        using var primaryBrush = new SolidBrush(Color.Firebrick);
+        float pointRadius   = pointDiameter / 2f;
+
+        using var primaryBrush   = new SolidBrush(Color.Firebrick);
         using var secondaryBrush = new SolidBrush(Color.RoyalBlue);
 
         foreach (KeyValuePair<Point, bool> entry in _points)
         {
-            Point cell = entry.Key;
+            Point cell    = entry.Key;
             float centerX = (cell.X + 0.5f) * cellWidth;
             float centerY = (cell.Y + 0.5f) * cellHeight;
-            Brush brush = entry.Value ? primaryBrush : secondaryBrush;
+            Brush brush   = entry.Value ? primaryBrush : secondaryBrush;
             graphics.FillEllipse(brush, centerX - pointRadius, centerY - pointRadius, pointDiameter, pointDiameter);
         }
     }

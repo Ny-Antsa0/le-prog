@@ -106,46 +106,22 @@ partial class Form1
         // numColumns
         // 
         this.numColumns.Location = new System.Drawing.Point(131, 18);
-        this.numColumns.Maximum = new decimal(new int[] {
-        200,
-        0,
-        0,
-        0});
-        this.numColumns.Minimum = new decimal(new int[] {
-        1,
-        0,
-        0,
-        0});
+        this.numColumns.Maximum = new decimal(new int[] {200, 0, 0, 0});
+        this.numColumns.Minimum = new decimal(new int[] {1, 0, 0, 0});
         this.numColumns.Name = "numColumns";
         this.numColumns.Size = new System.Drawing.Size(91, 23);
         this.numColumns.TabIndex = 3;
-        this.numColumns.Value = new decimal(new int[] {
-        10,
-        0,
-        0,
-        0});
+        this.numColumns.Value = new decimal(new int[] {10, 0, 0, 0});
         // 
         // numRows
         // 
         this.numRows.Location = new System.Drawing.Point(379, 18);
-        this.numRows.Maximum = new decimal(new int[] {
-        200,
-        0,
-        0,
-        0});
-        this.numRows.Minimum = new decimal(new int[] {
-        1,
-        0,
-        0,
-        0});
+        this.numRows.Maximum = new decimal(new int[] {200, 0, 0, 0});
+        this.numRows.Minimum = new decimal(new int[] {1, 0, 0, 0});
         this.numRows.Name = "numRows";
         this.numRows.Size = new System.Drawing.Size(91, 23);
         this.numRows.TabIndex = 4;
-        this.numRows.Value = new decimal(new int[] {
-        10,
-        0,
-        0,
-        0});
+        this.numRows.Value = new decimal(new int[] {10, 0, 0, 0});
         // 
         // btnApply
         // 
@@ -273,19 +249,11 @@ partial class Form1
         // numMissilesPrimary
         // 
         this.numMissilesPrimary.Location = new System.Drawing.Point(780, 95);
-        this.numMissilesPrimary.Maximum = new decimal(new int[] {
-        99,
-        0,
-        0,
-        0});
+        this.numMissilesPrimary.Maximum = new decimal(new int[] {99, 0, 0, 0});
         this.numMissilesPrimary.Name = "numMissilesPrimary";
         this.numMissilesPrimary.Size = new System.Drawing.Size(53, 23);
         this.numMissilesPrimary.TabIndex = 18;
-        this.numMissilesPrimary.Value = new decimal(new int[] {
-        3,
-        0,
-        0,
-        0});
+        this.numMissilesPrimary.Value = new decimal(new int[] {3, 0, 0, 0});
         // 
         // lblMissilesConfigSeparator
         // 
@@ -299,19 +267,11 @@ partial class Form1
         // numMissilesSecondary
         // 
         this.numMissilesSecondary.Location = new System.Drawing.Point(857, 95);
-        this.numMissilesSecondary.Maximum = new decimal(new int[] {
-        99,
-        0,
-        0,
-        0});
+        this.numMissilesSecondary.Maximum = new decimal(new int[] {99, 0, 0, 0});
         this.numMissilesSecondary.Name = "numMissilesSecondary";
         this.numMissilesSecondary.Size = new System.Drawing.Size(53, 23);
         this.numMissilesSecondary.TabIndex = 20;
-        this.numMissilesSecondary.Value = new decimal(new int[] {
-        3,
-        0,
-        0,
-        0});
+        this.numMissilesSecondary.Value = new decimal(new int[] {3, 0, 0, 0});
         // 
         // lblMissilePower
         // 
@@ -325,51 +285,40 @@ partial class Form1
         // numMissilePower
         // 
         this.numMissilePower.DecimalPlaces = 1;
-        this.numMissilePower.Increment = new decimal(new int[] {
-        1,
-        0,
-        0,
-        65536});
+        this.numMissilePower.Increment = new decimal(new int[] {1, 0, 0, 65536});
         this.numMissilePower.Location = new System.Drawing.Point(703, 128);
-        this.numMissilePower.Maximum = new decimal(new int[] {
-        9,
-        0,
-        0,
-        0});
-        this.numMissilePower.Minimum = new decimal(new int[] {
-        1,
-        0,
-        0,
-        0});
+        this.numMissilePower.Maximum = new decimal(new int[] {9, 0, 0, 0});
+        this.numMissilePower.Minimum = new decimal(new int[] {1, 0, 0, 0});
         this.numMissilePower.Name = "numMissilePower";
         this.numMissilePower.Size = new System.Drawing.Size(63, 23);
         this.numMissilePower.TabIndex = 22;
-        this.numMissilePower.Value = new decimal(new int[] {
-        5,
-        0,
-        0,
-        0});
+        this.numMissilePower.Value = new decimal(new int[] {5, 0, 0, 0});
         // 
-        // lblMissileTargetColumn
+        // lblMissileTargetColumn  — libellé mis à jour : "X (1‑9):"
         // 
         this.lblMissileTargetColumn.AutoSize = true;
-        this.lblMissileTargetColumn.Location = new System.Drawing.Point(712, 130);
+        this.lblMissileTargetColumn.Location = new System.Drawing.Point(660, 130);
         this.lblMissileTargetColumn.Name = "lblMissileTargetColumn";
-        this.lblMissileTargetColumn.Size = new System.Drawing.Size(20, 15);
+        this.lblMissileTargetColumn.Size = new System.Drawing.Size(50, 15);
         this.lblMissileTargetColumn.TabIndex = 23;
-        this.lblMissileTargetColumn.Text = "X:";
+        this.lblMissileTargetColumn.Text = "X (1-9):";
         // 
-        // numMissileTargetColumn
+        // numMissileTargetColumn  — decimal de 1,0 a 9,0 (pas 0,1)
         // 
-        this.numMissileTargetColumn.Location = new System.Drawing.Point(734, 128);
+        this.numMissileTargetColumn.DecimalPlaces = 1;
+        this.numMissileTargetColumn.Increment = new decimal(new int[] {1, 0, 0, 65536});
+        this.numMissileTargetColumn.Location = new System.Drawing.Point(715, 128);
+        this.numMissileTargetColumn.Minimum = new decimal(new int[] {1, 0, 0, 0});
+        this.numMissileTargetColumn.Maximum = new decimal(new int[] {9, 0, 0, 0});
         this.numMissileTargetColumn.Name = "numMissileTargetColumn";
-        this.numMissileTargetColumn.Size = new System.Drawing.Size(45, 23);
+        this.numMissileTargetColumn.Size = new System.Drawing.Size(60, 23);
         this.numMissileTargetColumn.TabIndex = 24;
+        this.numMissileTargetColumn.Value = new decimal(new int[] {1, 0, 0, 0});
         // 
         // lblMissileTargetRow
         // 
         this.lblMissileTargetRow.AutoSize = true;
-        this.lblMissileTargetRow.Location = new System.Drawing.Point(785, 130);
+        this.lblMissileTargetRow.Location = new System.Drawing.Point(782, 130);
         this.lblMissileTargetRow.Name = "lblMissileTargetRow";
         this.lblMissileTargetRow.Size = new System.Drawing.Size(20, 15);
         this.lblMissileTargetRow.TabIndex = 25;
@@ -377,7 +326,7 @@ partial class Form1
         // 
         // numMissileTargetRow
         // 
-        this.numMissileTargetRow.Location = new System.Drawing.Point(807, 128);
+        this.numMissileTargetRow.Location = new System.Drawing.Point(804, 128);
         this.numMissileTargetRow.Name = "numMissileTargetRow";
         this.numMissileTargetRow.Size = new System.Drawing.Size(45, 23);
         this.numMissileTargetRow.TabIndex = 26;
@@ -428,7 +377,7 @@ partial class Form1
         // lblActionHint
         // 
         this.lblActionHint.AutoSize = true;
-        this.lblActionHint.Location = new System.Drawing.Point(620, 112);
+        this.lblActionHint.Location = new System.Drawing.Point(130, 121);
         this.lblActionHint.Name = "lblActionHint";
         this.lblActionHint.Size = new System.Drawing.Size(0, 0);
         this.lblActionHint.TabIndex = 26;
