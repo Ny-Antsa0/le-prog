@@ -45,15 +45,35 @@ public partial class Form1 : Form
     // -----------------------------------------------------------------------
     private int ComputeTargetColumn()
     {
-        if (_columns <= 1)
+        // On vise uniquement les intersections internes (bords exclus).
+        if (_columns <= 2)
         {
-            return 0;
+            return -1;
         }
 
         double xInput = (double)numMissileTargetColumn.Value; // 1..9
         double normalized = (xInput - 1.0) / 8.0; // 0..1
-        int col = (int)Math.Round(normalized * (_columns - 1), MidpointRounding.AwayFromZero);
-        return Math.Clamp(col, 0, _columns - 1);
+        double scaled = 1.0 + normalized * (_columns - 2); // 1..(_columns-1)
+
+        // Apres calcul, on retire la partie decimale pour obtenir l'entier de placement.
+        int col = (int)scaled;
+        return Math.Clamp(col, 1, _columns - 1);
+    }
+
+    private int ComputeTargetRow()
+    {
+        // On vise uniquement les intersections internes (bords exclus).
+        if (_rows <= 2)
+        {
+            return -1;
+        }
+
+        double yInput = (double)numMissileTargetRow.Value; // 1..9
+        double normalized = (yInput - 1.0) / 8.0; // 0..1
+        double scaled = 1.0 + normalized * (_rows - 2); // 1..(_rows-1)
+
+        int row = (int)scaled;
+        return Math.Clamp(row, 1, _rows - 1);
     }
 
     private void MissileTargetChanged(object? sender, EventArgs e)
@@ -229,7 +249,8 @@ WHERE save_name = @save_name;", connection);
 
             foreach (PointState point in loadedPoints)
             {
-                if (point.X < 0 || point.X >= _columns || point.Y < 0 || point.Y >= _rows)
+                // Les pions sont autorises uniquement aux intersections internes.
+                if (point.X <= 0 || point.X >= _columns || point.Y <= 0 || point.Y >= _rows)
                 {
                     continue;
                 }
@@ -275,14 +296,13 @@ WHERE save_name = @save_name;", connection);
             return;
         }
 
-        // Calcul de la colonne réelle depuis la valeur décimale 1-9
+        // Calcul de la position reelle depuis les valeurs 1-9
         int targetColumn = ComputeTargetColumn();
-        int targetRowFromBottom = (int)numMissileTargetRow.Value;
-        int targetRow = (_rows - 1) - targetRowFromBottom;
+        int targetRow = ComputeTargetRow();
 
-        if (targetColumn < 0 || targetColumn >= _columns || targetRow < 0 || targetRow >= _rows)
+        if (targetColumn <= 0 || targetColumn >= _columns || targetRow <= 0 || targetRow >= _rows)
         {
-            MessageBox.Show("La case cible est hors de la grille.", "Missile", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("La cible est hors des intersections internes.", "Missile", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
@@ -304,7 +324,7 @@ WHERE save_name = @save_name;", connection);
         pnlGrid.Invalidate();
 
         MessageBox.Show(
-            $"{shooter} tire en X={numMissileTargetColumn.Value:0.0} → colonne {targetColumn}, Y={targetRowFromBottom}. Pions retires: {(removed ? 1 : 0)}.",
+            $"{shooter} tire en X={numMissileTargetColumn.Value:0.0} → colonne {targetColumn}, Y={numMissileTargetRow.Value:0.0} → ligne {targetRow}. Pions retires: {(removed ? 1 : 0)}.",
             "Missile",
             MessageBoxButtons.OK,
             MessageBoxIcon.Information);
@@ -344,24 +364,26 @@ WHERE save_name = @save_name;", connection);
         float cellWidth = usableWidth / _columns;
         float cellHeight = usableHeight / _rows;
 
-        int cellX = Math.Min((int)(e.X / cellWidth), _columns - 1);
-        int cellY = Math.Min((int)(e.Y / cellHeight), _rows - 1);
+        // On projette le clic sur l'intersection la plus proche.
+        int intersectionX = (int)Math.Round(e.X / cellWidth, MidpointRounding.AwayFromZero);
+        int intersectionY = (int)Math.Round(e.Y / cellHeight, MidpointRounding.AwayFromZero);
 
-        if (cellX < 0 || cellY < 0)
+        // Intersections valides uniquement a l'interieur (bords exclus).
+        if (intersectionX <= 0 || intersectionX >= _columns || intersectionY <= 0 || intersectionY >= _rows)
         {
             return;
         }
 
-        var clickedCell = new Point(cellX, cellY);
-        if (_points.ContainsKey(clickedCell))
+        var clickedIntersection = new Point(intersectionX, intersectionY);
+        if (_points.ContainsKey(clickedIntersection))
         {
             return;
         }
 
         bool currentPlayerIsPrimary = _usePrimaryColorNext;
-        _points[clickedCell] = currentPlayerIsPrimary;
+        _points[clickedIntersection] = currentPlayerIsPrimary;
 
-        if (HasFiveInRow(clickedCell, currentPlayerIsPrimary))
+        if (HasFiveInRow(clickedIntersection, currentPlayerIsPrimary))
         {
             _isGameOver = true;
             string winnerName = currentPlayerIsPrimary ? "Rouge" : "Bleu";
@@ -390,10 +412,9 @@ WHERE save_name = @save_name;", connection);
         if (numMissileTargetColumn.Value > numMissileTargetColumn.Maximum)
             numMissileTargetColumn.Value = numMissileTargetColumn.Maximum;
 
-        // Y : ligne depuis le bas, 0 à rows-1
-        decimal maxRow = Math.Max(0, _rows - 1);
-        numMissileTargetRow.Minimum = 0;
-        numMissileTargetRow.Maximum = maxRow;
+        // Y : repere utilisateur fixe de 1 a 9 (converti ensuite en intersection interne)
+        numMissileTargetRow.Minimum = 1;
+        numMissileTargetRow.Maximum = 9;
         if (numMissileTargetRow.Value < numMissileTargetRow.Minimum || numMissileTargetRow.Value > numMissileTargetRow.Maximum)
         {
             numMissileTargetRow.Value = numMissileTargetRow.Minimum;
@@ -420,11 +441,16 @@ WHERE save_name = @save_name;", connection);
         if (rdoActionMissile.Checked)
         {
             int previewCol = ComputeTargetColumn();
+            int previewRow = ComputeTargetRow();
             // lblActionHint.Text = $"Choisis X (1,0-9,0) et Y puis Tirer.  → colonne {previewCol}";
+            if (previewCol > 0 && previewCol < _columns && previewRow > 0 && previewRow < _rows)
+            {
+                lblActionHint.Text = $"Cible missile: X={previewCol}, Y={previewRow} (intersections internes).";
+            }
             return;
         }
 
-        lblActionHint.Text = "Clique sur la grille pour poser un pion.";
+        lblActionHint.Text = "Clique sur une intersection interne pour poser un pion.";
     }
 
     private bool HasFiveInRow(Point origin, bool playerColor)
@@ -480,30 +506,27 @@ WHERE save_name = @save_name;", connection);
         float cellWidth    = usableWidth  / _columns;
         float cellHeight   = usableHeight / _rows;
 
-        // --- Prévisualisation du missile (fond rouge translucide) ---
+        // --- Previsualisation du missile (grand cercle sur intersection) ---
         if (rdoActionMissile.Checked && !_isGameOver)
         {
-            int previewCol        = ComputeTargetColumn();
-            int previewRowBottom  = (int)numMissileTargetRow.Value;
-            int previewRow        = (_rows - 1) - previewRowBottom;
+            int previewCol = ComputeTargetColumn();
+            int previewRow = ComputeTargetRow();
 
-            if (previewCol >= 0 && previewCol < _columns && previewRow >= 0 && previewRow < _rows)
+            if (previewCol > 0 && previewCol < _columns && previewRow > 0 && previewRow < _rows)
             {
-                float px = previewCol  * cellWidth;
-                float py = previewRow  * cellHeight;
+                float cx = previewCol * cellWidth;
+                float cy = previewRow * cellHeight;
+                float previewDiameter = MathF.Max(12f, MathF.Min(cellWidth, cellHeight) * 0.9f);
+                float previewRadius = previewDiameter / 2f;
 
-                using var previewFill   = new SolidBrush(Color.FromArgb(80, Color.OrangeRed));
-                using var previewBorder = new Pen(Color.OrangeRed, 2f);
+                using var previewFill = new SolidBrush(Color.FromArgb(90, Color.OrangeRed));
+                using var previewBorder = new Pen(Color.OrangeRed, 2.5f);
 
-                graphics.FillRectangle(previewFill,   px, py, cellWidth,  cellHeight);
-                graphics.DrawRectangle(previewBorder, px, py, cellWidth,  cellHeight);
-
-                // Croix de visée
-                float cx = px + cellWidth  / 2f;
-                float cy = py + cellHeight / 2f;
-                float arm = MathF.Min(cellWidth, cellHeight) * 0.3f;
+                graphics.FillEllipse(previewFill, cx - previewRadius, cy - previewRadius, previewDiameter, previewDiameter);
+                graphics.DrawEllipse(previewBorder, cx - previewRadius, cy - previewRadius, previewDiameter, previewDiameter);
 
                 using var crossPen = new Pen(Color.Red, 2f);
+                float arm = previewRadius * 0.65f;
                 graphics.DrawLine(crossPen, cx - arm, cy, cx + arm, cy);
                 graphics.DrawLine(crossPen, cx, cy - arm, cx, cy + arm);
             }
@@ -533,10 +556,10 @@ WHERE save_name = @save_name;", connection);
 
         foreach (KeyValuePair<Point, bool> entry in _points)
         {
-            Point cell    = entry.Key;
-            float centerX = (cell.X + 0.5f) * cellWidth;
-            float centerY = (cell.Y + 0.5f) * cellHeight;
-            Brush brush   = entry.Value ? primaryBrush : secondaryBrush;
+            Point intersection = entry.Key;
+            float centerX = intersection.X * cellWidth;
+            float centerY = intersection.Y * cellHeight;
+            Brush brush = entry.Value ? primaryBrush : secondaryBrush;
             graphics.FillEllipse(brush, centerX - pointRadius, centerY - pointRadius, pointDiameter, pointDiameter);
         }
     }
