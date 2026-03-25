@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 public partial class Form1 : Form
 {
-    private const string DefaultConnectionString = "Host=localhost;Port=5433;Username=postgres;Password=etu003146;Database=point";
+    private const string DefaultConnectionString = "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=point";
     private int _columns = 10;
     private int _rows = 10;
     private readonly Dictionary<Point, bool> _points = new();
@@ -24,18 +24,18 @@ public partial class Form1 : Form
         numRows.ValueChanged += GridValueChanged;
         pnlGrid.Resize += GridPanelResize;
         Shown += Form1_Shown;
-        
+
         // Initialisation des gestionnaires d'événements pour les nouveaux contrôles
         rbPlacePoint.CheckedChanged += ActionSelectionChanged;
         rbFireMissile.CheckedChanged += ActionSelectionChanged;
         numPower.ValueChanged += MissileParametersChanged;
         rbPvP.CheckedChanged += GameModeChanged;
         rbPvAI.CheckedChanged += GameModeChanged;
-        
+
         // Activer les raccourcis clavier pour Ctrl+chiffre
         this.KeyPreview = true;
         this.KeyDown += Form1_KeyDown;
-        
+
         UpdateCurrentPlayerDisplay();
         UpdateMissileControls();
     }
@@ -60,7 +60,7 @@ public partial class Form1 : Form
         try
         {
             EnsureDatabaseObjects();
-            
+
             // Charger automatiquement la dernière partie sauvegardée
             LoadLastSave();
         }
@@ -103,7 +103,7 @@ LIMIT 1;", connection);
             {
                 loadedPoints = new List<PointState>();
             }
-            
+
             List<Point>? loadedInvulnerablePoints = JsonSerializer.Deserialize<List<Point>>(invulnerableJson);
             if (loadedInvulnerablePoints is null)
             {
@@ -112,7 +112,7 @@ LIMIT 1;", connection);
 
             // Appliquer les données chargées
             _isApplyingLoadedState = true;
-            
+
             numColumns.Value = loadedColumns;
             numRows.Value = loadedRows;
             _columns = loadedColumns;
@@ -145,7 +145,7 @@ LIMIT 1;", connection);
             UpdateCurrentPlayerDisplay();
             UpdateMissileControls();
             pnlGrid.Invalidate();
-            
+
             MessageBox.Show($"Partie '{saveName}' chargée automatiquement.", "Reprise de partie", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex)
@@ -207,7 +207,7 @@ LIMIT 1;", connection);
             List<PointState> serializedPoints = _points
                 .Select(entry => new PointState(entry.Key.X, entry.Key.Y, entry.Value))
                 .ToList();
-            
+
             List<Point> serializedInvulnerablePoints = _invulnerablePoints.ToList();
 
             string pointsJson = JsonSerializer.Serialize(serializedPoints);
@@ -286,7 +286,7 @@ WHERE save_name = @save_name;", connection);
             {
                 loadedPoints = new List<PointState>();
             }
-            
+
             List<Point>? loadedInvulnerablePoints = JsonSerializer.Deserialize<List<Point>>(invulnerableJson);
             if (loadedInvulnerablePoints is null)
             {
@@ -392,14 +392,14 @@ WHERE save_name = @save_name;", connection);
         // En mode IA, seul le joueur (Bleu) peut utiliser les missiles, pas l'IA
         bool canUseMissiles = missileMode && !_isGameOver && (!_isAIMode || !_usePrimaryColorNext);
         grpMissile.Enabled = canUseMissiles;
-        
+
         if (missileMode)
         {
             // Utiliser la ligne sélectionnée par l'utilisateur et calculer la colonne cible
             int power = (int)numPower.Value;
             int targetRow = (int)numTargetRow.Value - 1; // Convertir de 1-20 à 0-19
             int targetColumn = CalculateTargetColumn(power, _columns);
-            
+
             // Afficher les informations calculées
             lblTargetRow.Text = $"Ligne: {targetRow + 1}, Colonne: {targetColumn + 1}\n(puissance: {power})";
         }
@@ -410,13 +410,13 @@ WHERE save_name = @save_name;", connection);
         _isAIMode = rbPvAI.Checked;
         UpdateCurrentPlayerDisplay();
         UpdateMissileControls();
-        
+
         if (_isAIMode)
         {
             // Choisir aléatoirement qui commence en mode IA
             Random rand = new Random();
             bool aiStarts = rand.Next(2) == 0;
-            
+
             if (aiStarts)
             {
                 _usePrimaryColorNext = true; // IA joue en Rouge
@@ -462,7 +462,7 @@ WHERE save_name = @save_name;", connection);
         }
 
         var targetPoint = new Point(targetColumn, targetRow);
-        
+
         // Vérifier si le point est invulnérable
         if (_invulnerablePoints.Contains(targetPoint))
         {
@@ -473,7 +473,7 @@ WHERE save_name = @save_name;", connection);
 
         // Retirer le point s'il existe
         bool pointRemoved = _points.Remove(targetPoint);
-        
+
         if (pointRemoved)
         {
             MessageBox.Show($"Missile tiré avec puissance {power}!\nPoint éliminé en ligne {targetRow + 1}, colonne {targetColumn + 1}.", "Missile", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -494,7 +494,7 @@ WHERE save_name = @save_name;", connection);
             // En mode IA, alterner entre joueur et IA
             _usePrimaryColorNext = !_usePrimaryColorNext;
             UpdateCurrentPlayerDisplay();
-            
+
             // Si c'est le tour de l'IA (Rouge = true)
             if (_usePrimaryColorNext)
             {
@@ -513,7 +513,7 @@ WHERE save_name = @save_name;", connection);
     {
         // Attendre un peu pour que l'interface se mette à jour
         Thread.Sleep(500);
-        
+
         this.Invoke(() =>
         {
             if (_isGameOver || !_isAIMode) return;
@@ -550,7 +550,7 @@ WHERE save_name = @save_name;", connection);
                 // L'IA pose un point
                 // Priorité: 1. Bloquer les alignements adverses 2. Créer des alignements 3. Au hasard
                 var bestMove = FindBestMove(availableMoves);
-                
+
                 if (bestMove.HasValue)
                 {
                     ExecuteAIMove(bestMove.Value);
@@ -584,7 +584,7 @@ WHERE save_name = @save_name;", connection);
     private Point? FindBestMove(List<Point> availableMoves)
     {
         Random rand = new Random();
-        
+
         // 1. Vérifier si l'IA peut bloquer un alignement adverse
         foreach (var move in availableMoves)
         {
@@ -623,7 +623,7 @@ WHERE save_name = @save_name;", connection);
             MarkAlignedPointsAsInvulnerable(move, currentPlayerIsPrimary);
             MessageBox.Show("L'IA a aligné 5 points !\nCes points sont maintenant invulnérables.", "IA", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
-        
+
         // Changer de joueur pour le prochain tour
         SwitchPlayer();
         pnlGrid.Invalidate();
@@ -721,7 +721,7 @@ WHERE save_name = @save_name;", connection);
     {
         // Marquer le point d'origine
         _invulnerablePoints.Add(origin);
-        
+
         // Marquer dans la direction positive
         int x = origin.X + dx;
         int y = origin.Y + dy;
@@ -736,7 +736,7 @@ WHERE save_name = @save_name;", connection);
             x += dx;
             y += dy;
         }
-        
+
         // Marquer dans la direction négative
         x = origin.X - dx;
         y = origin.Y - dy;
@@ -826,9 +826,9 @@ WHERE save_name = @save_name;", connection);
             float centerX = cell.X * cellWidth;
             float centerY = cell.Y * cellHeight;
             Brush brush = entry.Value ? primaryBrush : secondaryBrush;
-            
+
             graphics.FillEllipse(brush, centerX - pointRadius, centerY - pointRadius, pointDiameter, pointDiameter);
-            
+
             // Dessiner un cercle d'or autour des points invulnérables
             if (_invulnerablePoints.Contains(cell))
             {
