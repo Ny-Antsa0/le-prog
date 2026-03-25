@@ -32,3 +32,23 @@ C:\Users\zaka\Documents\GitHub\le-prog\jdPoint\obj\Debug\net9.0-windows\refint\j
 C:\Users\zaka\Documents\GitHub\le-prog\jdPoint\obj\Debug\net9.0-windows\jdPoint.pdb
 C:\Users\zaka\Documents\GitHub\le-prog\jdPoint\obj\Debug\net9.0-windows\jdPoint.genruntimeconfig.cache
 C:\Users\zaka\Documents\GitHub\le-prog\jdPoint\obj\Debug\net9.0-windows\ref\jdPoint.dll
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\bin\Debug\net9.0-windows\jdPoint.exe
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\bin\Debug\net9.0-windows\jdPoint.deps.json
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\bin\Debug\net9.0-windows\jdPoint.runtimeconfig.json
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\bin\Debug\net9.0-windows\jdPoint.dll
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\bin\Debug\net9.0-windows\jdPoint.pdb
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\bin\Debug\net9.0-windows\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\bin\Debug\net9.0-windows\Microsoft.Extensions.Logging.Abstractions.dll
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\bin\Debug\net9.0-windows\Npgsql.dll
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\jdPoint.csproj.AssemblyReference.cache
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\jdPoint.GeneratedMSBuildEditorConfig.editorconfig
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\jdPoint.AssemblyInfoInputs.cache
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\jdPoint.AssemblyInfo.cs
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\jdPoint.csproj.CoreCompileInputs.cache
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\jdPoint.sourcelink.json
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\jdPoint.csproj.Up2Date
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\jdPoint.dll
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\refint\jdPoint.dll
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\jdPoint.pdb
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\jdPoint.genruntimeconfig.cache
+D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\ref\jdPoint.dll
