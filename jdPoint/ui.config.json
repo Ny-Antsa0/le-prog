@@ -1,24 +1,24 @@
 {
-    "Window": {
-        "Title": "Grille personnalisable",
-        "Width": 980,
-        "Height": 450,
-        "MinimumWidth": 600,
-        "MinimumHeight": 350
-    },
-    "Layout": {
-        "NavigationModel": "TopBar",
-        "Margin": 12,
-        "TopBarHeight": 150,
-        "SidebarWidth": 310
-    },
-    "Colors": {
-        "FormBackground": "#F3F5F7",
-        "GridBackground": "#FFFFFF",
-        "GridLine": "#696969",
-        "PrimaryPoint": "#B22222",
-        "SecondaryPoint": "#4169E1",
-        "MissilePreview": "#FF4500",
-        "MissileCrosshair": "#C00000"
-    }
+  "Window": {
+    "Title": "Grille personnalisable",
+    "Width": 980,
+    "Height": 450,
+    "MinimumWidth": 600,
+    "MinimumHeight": 350
+  },
+  "Layout": {
+    "NavigationModel": "TopBar",
+    "Margin": 12,
+    "TopBarHeight": 150,
+    "SidebarWidth": 310
+  },
+  "Colors": {
+    "FormBackground": "#F3F5F7",
+    "GridBackground": "#FFFFFF",
+    "GridLine": "#696969",
+    "PrimaryPoint": "#B22222",
+    "SecondaryPoint": "#4169E1",
+    "MissilePreview": "#FF4500",
+    "MissileCrosshair": "#C00000"
+  }
 }

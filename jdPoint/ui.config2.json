@@ -13,11 +13,11 @@
         "SidebarWidth": 360
     },
     "Colors": {
-        "FormBackground": "#0F172A",
+        "FormBackground": "#F0F7FA",
         "GridBackground": "#F8FAFC",
         "GridLine": "#334155",
-        "PrimaryPoint": "#F59E0B",
-        "SecondaryPoint": "#06B6D4",
+        "PrimaryPoint": "#15FE0B",
+        "SecondaryPoint": "#F6B6D4",
         "MissilePreview": "#22C55E",
         "MissileCrosshair": "#15803D"
     }

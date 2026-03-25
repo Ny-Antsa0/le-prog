@@ -36,3 +36,4 @@ Use HTML hex colors, for example:
 - `#4169E1`
 
 If a color is invalid, the app falls back to safe defaults.
+
