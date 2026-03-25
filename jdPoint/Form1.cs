@@ -41,10 +41,102 @@ public partial class Form1 : Form
         try
         {
             EnsureDatabaseObjects();
+            
+            // Charger automatiquement la dernière partie sauvegardée
+            LoadLastSave();
         }
         catch (Exception ex)
         {
             MessageBox.Show($"Connexion PostgreSQL impossible. Verifie la chaine de connexion.\n\n{ex.Message}", "Base de donnees", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+    }
+
+    private void LoadLastSave()
+    {
+        try
+        {
+            using var connection = new NpgsqlConnection(GetConnectionString());
+            connection.Open();
+
+            // Récupérer la sauvegarde la plus récente
+            using var command = new NpgsqlCommand(@"
+SELECT save_name, columns_count, rows_count, points_json::text, invulnerable_json::text, use_primary_color_next, is_game_over
+FROM game_saves
+ORDER BY updated_at DESC
+LIMIT 1;", connection);
+
+            using var reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                return; // Pas de sauvegarde trouvée
+            }
+
+            string saveName = reader.GetString(0);
+            int loadedColumns = reader.GetInt32(1);
+            int loadedRows = reader.GetInt32(2);
+            string pointsJson = reader.GetString(3);
+            string invulnerableJson = reader.IsDBNull(4) ? "[]" : reader.GetString(4);
+            bool loadedUsePrimaryColorNext = reader.GetBoolean(5);
+            bool loadedIsGameOver = reader.GetBoolean(6);
+
+            List<PointState>? loadedPoints = JsonSerializer.Deserialize<List<PointState>>(pointsJson);
+            if (loadedPoints is null)
+            {
+                loadedPoints = new List<PointState>();
+            }
+            
+            List<Point>? loadedInvulnerablePoints = JsonSerializer.Deserialize<List<Point>>(invulnerableJson);
+            if (loadedInvulnerablePoints is null)
+            {
+                loadedInvulnerablePoints = new List<Point>();
+            }
+
+            // Appliquer les données chargées
+            _isApplyingLoadedState = true;
+            
+            numColumns.Value = loadedColumns;
+            numRows.Value = loadedRows;
+            _columns = loadedColumns;
+            _rows = loadedRows;
+            txtSaveName.Text = saveName;
+
+            _points.Clear();
+            foreach (PointState point in loadedPoints)
+            {
+                if (point.X >= 0 && point.X < _columns && point.Y >= 0 && point.Y < _rows)
+                {
+                    _points[new Point(point.X, point.Y)] = point.IsPrimary;
+                }
+            }
+
+            _invulnerablePoints.Clear();
+            foreach (Point point in loadedInvulnerablePoints)
+            {
+                if (point.X >= 0 && point.X < _columns && point.Y >= 0 && point.Y < _rows)
+                {
+                    _invulnerablePoints.Add(point);
+                }
+            }
+
+            _usePrimaryColorNext = loadedUsePrimaryColorNext;
+            _isGameOver = loadedIsGameOver;
+
+            _isApplyingLoadedState = false;
+
+            UpdateCurrentPlayerDisplay();
+            UpdateMissileControls();
+            pnlGrid.Invalidate();
+            
+            MessageBox.Show($"Partie '{saveName}' chargée automatiquement.", "Reprise de partie", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            // Ne pas afficher d'erreur si pas de sauvegarde, juste continuer avec une nouvelle partie
+            if (ex.Message.Contains("Aucune sauvegarde"))
+            {
+                return;
+            }
+            MessageBox.Show($"Echec du chargement automatique.\n\n{ex.Message}", "Chargement", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 
