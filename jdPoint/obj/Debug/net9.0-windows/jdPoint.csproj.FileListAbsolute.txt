@@ -52,3 +52,4 @@ D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\refint\jdPoi
 D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\jdPoint.pdb
 D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\jdPoint.genruntimeconfig.cache
 D:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\obj\Debug\net9.0-windows\ref\jdPoint.dll
+d:\MES DOCUMENTS\S6\ProgS4\le-prog\jdPoint\bin\Debug\net9.0-windows\ui.config.json

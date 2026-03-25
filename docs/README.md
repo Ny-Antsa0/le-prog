@@ -5,6 +5,7 @@ This folder contains practical project documentation patterns:
 - `task-oriented-guides.md`: how to write task-first docs (build/run/debug/release).
 - `architecture-decision-records.md`: ADR template with examples.
 - `docs-in-pr-workflow.md`: how to keep docs updated with code changes.
+- `ui-config.md`: single-file UI configuration for colors, layout, and window sizing.
 
 Recommended workflow:
 

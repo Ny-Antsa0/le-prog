@@ -5,7 +5,8 @@ using Npgsql;
 
 public partial class Form1 : Form
 {
-    private const string DefaultConnectionString = "Host=localhost;Port=5432;Username=postgres;Password=8889;Database=point";
+    private const string DefaultConnectionString = "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=point";
+    private const string UiConfigFileName = "ui.config.json";
     private int _columns = 10;
     private int _rows = 10;
     private readonly Dictionary<Point, bool> _points = new();
@@ -14,10 +15,21 @@ public partial class Form1 : Form
     private bool _isApplyingLoadedState;
     private int _missilesPrimaryRemaining;
     private int _missilesSecondaryRemaining;
+    private UiConfig _uiConfig = UiConfig.CreateDefault();
+
+    private Color _gridBackgroundColor = Color.White;
+    private Color _gridLineColor = Color.DimGray;
+    private Color _primaryPointColor = Color.Firebrick;
+    private Color _secondaryPointColor = Color.RoyalBlue;
+    private Color _missilePreviewColor = Color.OrangeRed;
+    private Color _missileCrosshairColor = Color.Red;
 
     public Form1()
     {
         InitializeComponent();
+        LoadAndApplyUiConfig();
+
+        Resize += Form1_Resize;
         numColumns.ValueChanged += GridValueChanged;
         numRows.ValueChanged += GridValueChanged;
         pnlGrid.Resize += GridPanelResize;
@@ -36,6 +48,212 @@ public partial class Form1 : Form
         numMissilePower.Visible = false;
 
         RestartGame();
+    }
+
+    private void Form1_Resize(object? sender, EventArgs e)
+    {
+        ApplyRuntimeLayout();
+    }
+
+    private void LoadAndApplyUiConfig()
+    {
+        _uiConfig = LoadUiConfig();
+
+        BackColor = ParseColor(_uiConfig.Colors.FormBackground, SystemColors.Control);
+        pnlGrid.BackColor = ParseColor(_uiConfig.Colors.GridBackground, Color.White);
+
+        _gridBackgroundColor = ParseColor(_uiConfig.Colors.GridBackground, Color.White);
+        _gridLineColor = ParseColor(_uiConfig.Colors.GridLine, Color.DimGray);
+        _primaryPointColor = ParseColor(_uiConfig.Colors.PrimaryPoint, Color.Firebrick);
+        _secondaryPointColor = ParseColor(_uiConfig.Colors.SecondaryPoint, Color.RoyalBlue);
+        _missilePreviewColor = ParseColor(_uiConfig.Colors.MissilePreview, Color.OrangeRed);
+        _missileCrosshairColor = ParseColor(_uiConfig.Colors.MissileCrosshair, Color.Red);
+
+        if (_uiConfig.Window.Width > 0 && _uiConfig.Window.Height > 0)
+        {
+            ClientSize = new Size(_uiConfig.Window.Width, _uiConfig.Window.Height);
+        }
+
+        if (_uiConfig.Window.MinimumWidth > 0 && _uiConfig.Window.MinimumHeight > 0)
+        {
+            MinimumSize = new Size(_uiConfig.Window.MinimumWidth, _uiConfig.Window.MinimumHeight);
+        }
+
+        if (!string.IsNullOrWhiteSpace(_uiConfig.Window.Title))
+        {
+            Text = _uiConfig.Window.Title;
+        }
+
+        ApplyRuntimeLayout();
+    }
+
+    private void ApplyRuntimeLayout()
+    {
+        string mode = _uiConfig.Layout.NavigationModel?.Trim().ToLowerInvariant() ?? "topbar";
+        if (mode == "sidebar")
+        {
+            ApplySidebarLayout();
+            return;
+        }
+
+        ApplyTopBarLayout();
+    }
+
+    private void ApplyTopBarLayout()
+    {
+        int margin = Math.Max(6, _uiConfig.Layout.Margin);
+        int topBarHeight = Math.Max(130, _uiConfig.Layout.TopBarHeight);
+
+        pnlGrid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+
+        int gridLeft = margin;
+        int gridTop = topBarHeight + margin;
+        int gridWidth = Math.Max(120, ClientSize.Width - (margin * 2));
+        int gridHeight = Math.Max(120, ClientSize.Height - gridTop - margin);
+
+        pnlGrid.Location = new Point(gridLeft, gridTop);
+        pnlGrid.Size = new Size(gridWidth, gridHeight);
+    }
+
+    private void ApplySidebarLayout()
+    {
+        int margin = Math.Max(6, _uiConfig.Layout.Margin);
+        int sidebarWidth = Math.Max(270, _uiConfig.Layout.SidebarWidth);
+
+        int x = margin;
+        int y = margin;
+        int lineHeight = 26;
+        int labelWidth = 120;
+        int inputWidth = 92;
+        int buttonWidth = 120;
+        int rowGap = 8;
+
+        lblColumns.Location = new Point(x, y + 5);
+        lblColumns.Size = new Size(labelWidth, 15);
+        numColumns.Location = new Point(x + labelWidth, y);
+        numColumns.Size = new Size(inputWidth, lineHeight);
+        y += lineHeight + rowGap;
+
+        lblRows.Location = new Point(x, y + 5);
+        lblRows.Size = new Size(labelWidth, 15);
+        numRows.Location = new Point(x + labelWidth, y);
+        numRows.Size = new Size(inputWidth, lineHeight);
+        y += lineHeight + rowGap;
+
+        btnApply.Location = new Point(x, y);
+        btnApply.Size = new Size(buttonWidth, lineHeight);
+        btnRestart.Location = new Point(x + buttonWidth + 10, y);
+        btnRestart.Size = new Size(buttonWidth, lineHeight);
+        y += lineHeight + rowGap + 2;
+
+        lblSaveName.Location = new Point(x, y + 5);
+        lblSaveName.Size = new Size(labelWidth, 15);
+        y += lineHeight;
+        txtSaveName.Location = new Point(x, y);
+        txtSaveName.Size = new Size(sidebarWidth - (margin * 2), lineHeight);
+        y += lineHeight + rowGap;
+
+        btnSave.Location = new Point(x, y);
+        btnSave.Size = new Size(buttonWidth, lineHeight);
+        btnLoad.Location = new Point(x + buttonWidth + 10, y);
+        btnLoad.Size = new Size(buttonWidth, lineHeight);
+        y += lineHeight + rowGap + 2;
+
+        lblCurrentPlayerValue.Location = new Point(x, y);
+        lblMissilesPrimary.Location = new Point(x + 45, y + 1);
+        lblMissilesPrimaryValue.Location = new Point(x + 83, y + 1);
+        lblMissilesSecondary.Location = new Point(x + 115, y + 1);
+        lblMissilesSecondaryValue.Location = new Point(x + 145, y + 1);
+        y += lineHeight + rowGap;
+
+        grpAction.Location = new Point(x, y);
+        grpAction.Size = new Size(sidebarWidth - (margin * 2), 58);
+        y += 58 + rowGap;
+
+        lblMissilesConfig.Location = new Point(x, y + 5);
+        lblMissilesConfig.Size = new Size(50, 15);
+        numMissilesPrimary.Location = new Point(x + 55, y);
+        numMissilesPrimary.Size = new Size(52, lineHeight);
+        lblMissilesConfigSeparator.Location = new Point(x + 112, y + 5);
+        numMissilesSecondary.Location = new Point(x + 127, y);
+        numMissilesSecondary.Size = new Size(52, lineHeight);
+        y += lineHeight + rowGap;
+
+        lblMissileTargetColumn.Location = new Point(x, y + 5);
+        numMissileTargetColumn.Location = new Point(x + 55, y);
+        numMissileTargetColumn.Size = new Size(58, lineHeight);
+
+        lblMissileTargetRow.Location = new Point(x + 120, y + 5);
+        numMissileTargetRow.Location = new Point(x + 140, y);
+        numMissileTargetRow.Size = new Size(48, lineHeight);
+        y += lineHeight + rowGap;
+
+        btnFireMissile.Location = new Point(x, y);
+        btnFireMissile.Size = new Size(buttonWidth, lineHeight);
+        lblActionHint.Location = new Point(x, y + lineHeight + 4);
+        lblActionHint.Size = new Size(sidebarWidth - (margin * 2), 32);
+
+        lblMissilePower.Visible = false;
+        numMissilePower.Visible = false;
+        lblCurrentPlayer.Visible = false;
+
+        pnlGrid.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+        int gridLeft = sidebarWidth + margin;
+        int gridTop = margin;
+        int gridWidth = Math.Max(120, ClientSize.Width - gridLeft - margin);
+        int gridHeight = Math.Max(120, ClientSize.Height - (margin * 2));
+        pnlGrid.Location = new Point(gridLeft, gridTop);
+        pnlGrid.Size = new Size(gridWidth, gridHeight);
+    }
+
+    private UiConfig LoadUiConfig()
+    {
+        UiConfig fallback = UiConfig.CreateDefault();
+
+        string[] candidates =
+        {
+            Path.Combine(AppContext.BaseDirectory, UiConfigFileName),
+            Path.Combine(Application.StartupPath, UiConfigFileName),
+            Path.Combine(Environment.CurrentDirectory, UiConfigFileName)
+        };
+
+        string? configPath = candidates.FirstOrDefault(File.Exists);
+        if (configPath is null)
+        {
+            return fallback;
+        }
+
+        try
+        {
+            string json = File.ReadAllText(configPath);
+            UiConfig? parsed = JsonSerializer.Deserialize<UiConfig>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            return parsed ?? fallback;
+        }
+        catch
+        {
+            return fallback;
+        }
+    }
+
+    private static Color ParseColor(string? value, Color fallback)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
+        }
+
+        try
+        {
+            return ColorTranslator.FromHtml(value);
+        }
+        catch
+        {
+            return fallback;
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -473,44 +691,44 @@ WHERE save_name = @save_name;", connection);
         }
 
         var graphics = e.Graphics;
-        graphics.Clear(Color.White);
+        graphics.Clear(_gridBackgroundColor);
 
-        float usableWidth  = pnlGrid.ClientSize.Width  - 1;
+        float usableWidth = pnlGrid.ClientSize.Width - 1;
         float usableHeight = pnlGrid.ClientSize.Height - 1;
-        float cellWidth    = usableWidth  / _columns;
-        float cellHeight   = usableHeight / _rows;
+        float cellWidth = usableWidth / _columns;
+        float cellHeight = usableHeight / _rows;
 
         // --- Prévisualisation du missile (fond rouge translucide) ---
         if (rdoActionMissile.Checked && !_isGameOver)
         {
-            int previewCol        = ComputeTargetColumn();
-            int previewRowBottom  = (int)numMissileTargetRow.Value;
-            int previewRow        = (_rows - 1) - previewRowBottom;
+            int previewCol = ComputeTargetColumn();
+            int previewRowBottom = (int)numMissileTargetRow.Value;
+            int previewRow = (_rows - 1) - previewRowBottom;
 
             if (previewCol >= 0 && previewCol < _columns && previewRow >= 0 && previewRow < _rows)
             {
-                float px = previewCol  * cellWidth;
-                float py = previewRow  * cellHeight;
+                float px = previewCol * cellWidth;
+                float py = previewRow * cellHeight;
 
-                using var previewFill   = new SolidBrush(Color.FromArgb(80, Color.OrangeRed));
-                using var previewBorder = new Pen(Color.OrangeRed, 2f);
+                using var previewFill = new SolidBrush(Color.FromArgb(80, _missilePreviewColor));
+                using var previewBorder = new Pen(_missilePreviewColor, 2f);
 
-                graphics.FillRectangle(previewFill,   px, py, cellWidth,  cellHeight);
-                graphics.DrawRectangle(previewBorder, px, py, cellWidth,  cellHeight);
+                graphics.FillRectangle(previewFill, px, py, cellWidth, cellHeight);
+                graphics.DrawRectangle(previewBorder, px, py, cellWidth, cellHeight);
 
                 // Croix de visée
-                float cx = px + cellWidth  / 2f;
+                float cx = px + cellWidth / 2f;
                 float cy = py + cellHeight / 2f;
                 float arm = MathF.Min(cellWidth, cellHeight) * 0.3f;
 
-                using var crossPen = new Pen(Color.Red, 2f);
+                using var crossPen = new Pen(_missileCrosshairColor, 2f);
                 graphics.DrawLine(crossPen, cx - arm, cy, cx + arm, cy);
                 graphics.DrawLine(crossPen, cx, cy - arm, cx, cy + arm);
             }
         }
 
         // --- Grille ---
-        using var pen = new Pen(Color.DimGray, 1f);
+        using var pen = new Pen(_gridLineColor, 1f);
 
         for (int x = 0; x <= _columns; x++)
         {
@@ -526,17 +744,17 @@ WHERE save_name = @save_name;", connection);
 
         // --- Pions ---
         float pointDiameter = MathF.Max(4f, MathF.Min(cellWidth, cellHeight) * 0.45f);
-        float pointRadius   = pointDiameter / 2f;
+        float pointRadius = pointDiameter / 2f;
 
-        using var primaryBrush   = new SolidBrush(Color.Firebrick);
-        using var secondaryBrush = new SolidBrush(Color.RoyalBlue);
+        using var primaryBrush = new SolidBrush(_primaryPointColor);
+        using var secondaryBrush = new SolidBrush(_secondaryPointColor);
 
         foreach (KeyValuePair<Point, bool> entry in _points)
         {
-            Point cell    = entry.Key;
+            Point cell = entry.Key;
             float centerX = (cell.X + 0.5f) * cellWidth;
             float centerY = (cell.Y + 0.5f) * cellHeight;
-            Brush brush   = entry.Value ? primaryBrush : secondaryBrush;
+            Brush brush = entry.Value ? primaryBrush : secondaryBrush;
             graphics.FillEllipse(brush, centerX - pointRadius, centerY - pointRadius, pointDiameter, pointDiameter);
         }
     }
@@ -564,6 +782,73 @@ CREATE TABLE IF NOT EXISTS game_saves
 );", connection);
 
         command.ExecuteNonQuery();
+    }
+
+    private sealed class UiConfig
+    {
+        public UiWindowConfig Window { get; init; } = new();
+        public UiLayoutConfig Layout { get; init; } = new();
+        public UiColorsConfig Colors { get; init; } = new();
+
+        public static UiConfig CreateDefault()
+        {
+            return new UiConfig
+            {
+                Window = new UiWindowConfig
+                {
+                    Title = "Grille personnalisable",
+                    Width = 980,
+                    Height = 450,
+                    MinimumWidth = 600,
+                    MinimumHeight = 350
+                },
+                Layout = new UiLayoutConfig
+                {
+                    NavigationModel = "TopBar",
+                    Margin = 12,
+                    TopBarHeight = 150,
+                    SidebarWidth = 310
+                },
+                Colors = new UiColorsConfig
+                {
+                    FormBackground = "#F3F5F7",
+                    GridBackground = "#FFFFFF",
+                    GridLine = "#696969",
+                    PrimaryPoint = "#B22222",
+                    SecondaryPoint = "#4169E1",
+                    MissilePreview = "#FF4500",
+                    MissileCrosshair = "#C00000"
+                }
+            };
+        }
+    }
+
+    private sealed class UiWindowConfig
+    {
+        public string Title { get; init; } = "Grille personnalisable";
+        public int Width { get; init; } = 980;
+        public int Height { get; init; } = 450;
+        public int MinimumWidth { get; init; } = 600;
+        public int MinimumHeight { get; init; } = 350;
+    }
+
+    private sealed class UiLayoutConfig
+    {
+        public string NavigationModel { get; init; } = "TopBar";
+        public int Margin { get; init; } = 12;
+        public int TopBarHeight { get; init; } = 150;
+        public int SidebarWidth { get; init; } = 310;
+    }
+
+    private sealed class UiColorsConfig
+    {
+        public string FormBackground { get; init; } = "#F3F5F7";
+        public string GridBackground { get; init; } = "#FFFFFF";
+        public string GridLine { get; init; } = "#696969";
+        public string PrimaryPoint { get; init; } = "#B22222";
+        public string SecondaryPoint { get; init; } = "#4169E1";
+        public string MissilePreview { get; init; } = "#FF4500";
+        public string MissileCrosshair { get; init; } = "#C00000";
     }
 
     private sealed record PointState(int X, int Y, bool IsPrimary);
