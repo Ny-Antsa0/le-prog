@@ -11,6 +11,7 @@ public partial class Form1 : Form
     private readonly Dictionary<Point, bool> _points = new();
     private bool _usePrimaryColorNext = true;
     private bool _isGameOver;
+    private readonly List<WinningLine> _winningLines = new();
     private bool _isApplyingLoadedState;
     private int _missilesPrimaryRemaining;
     private int _missilesSecondaryRemaining;
@@ -85,7 +86,7 @@ public partial class Form1 : Form
 
     private void Form1_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (!rdoActionMissile.Checked || _isGameOver)
+        if (!rdoActionMissile.Checked)
         {
             return;
         }
@@ -93,6 +94,24 @@ public partial class Form1 : Form
         // Ne pas intercepter la saisie libre dans le champ de nom de sauvegarde.
         if (ActiveControl is TextBoxBase)
         {
+            return;
+        }
+
+        if (e.KeyCode is Keys.Q or Keys.Up)
+        {
+            decimal nextRow = Math.Max(numMissileTargetRow.Minimum, numMissileTargetRow.Value - 1m);
+            numMissileTargetRow.Value = nextRow;
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            return;
+        }
+
+        if (e.KeyCode is Keys.W or Keys.Down)
+        {
+            decimal nextRow = Math.Min(numMissileTargetRow.Maximum, numMissileTargetRow.Value + 1m);
+            numMissileTargetRow.Value = nextRow;
+            e.Handled = true;
+            e.SuppressKeyPress = true;
             return;
         }
 
@@ -298,7 +317,9 @@ WHERE save_name = @save_name;", connection);
             }
 
             _usePrimaryColorNext = loadedUsePrimaryColorNext;
-            _isGameOver = loadedIsGameOver;
+            _ = loadedIsGameOver;
+            _isGameOver = false;
+            _winningLines.Clear();
 
             InitializeMissileStocksFromConfig();
             SyncMissileTargetBounds();
@@ -315,12 +336,6 @@ WHERE save_name = @save_name;", connection);
 
     private void btnFireMissile_Click(object? sender, EventArgs e)
     {
-        if (_isGameOver)
-        {
-            MessageBox.Show("La partie est terminee.", "Missile", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
-        }
-
         if (!rdoActionMissile.Checked)
         {
             MessageBox.Show("Selectionne d'abord l'action 'Lancer un missile'.", "Missile", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -341,11 +356,15 @@ WHERE save_name = @save_name;", connection);
 
         if (targetColumn <= 0 || targetColumn >= _columns || targetRow <= 0 || targetRow >= _rows)
         {
-            MessageBox.Show("La cible est hors des intersections internes.", "Missile", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("//", "//", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
         bool removed = _points.Remove(new Point(targetColumn, targetRow));
+        if (removed)
+        {
+            RemoveWinningLinesThroughPoint(new Point(targetColumn, targetRow));
+        }
 
         if (_usePrimaryColorNext)
         {
@@ -374,6 +393,7 @@ WHERE save_name = @save_name;", connection);
         _points.Clear();
         _usePrimaryColorNext = true;
         _isGameOver = false;
+        _winningLines.Clear();
         InitializeMissileStocksFromConfig();
         SyncMissileTargetBounds();
         UpdateStatusIndicators();
@@ -382,7 +402,7 @@ WHERE save_name = @save_name;", connection);
 
     private void pnlGrid_MouseClick(object sender, MouseEventArgs e)
     {
-        if (e.Button != MouseButtons.Left || _columns <= 0 || _rows <= 0 || _isGameOver)
+        if (e.Button != MouseButtons.Left || _columns <= 0 || _rows <= 0)
         {
             return;
         }
@@ -420,13 +440,30 @@ WHERE save_name = @save_name;", connection);
         }
 
         bool currentPlayerIsPrimary = _usePrimaryColorNext;
+
         _points[clickedIntersection] = currentPlayerIsPrimary;
 
-        if (HasFiveInRow(clickedIntersection, currentPlayerIsPrimary))
+        List<WinningLine> newWinningLines = GetWinningLines(clickedIntersection, currentPlayerIsPrimary);
+        int addedLines = 0;
+        foreach (WinningLine line in newWinningLines)
         {
-            _isGameOver = true;
+            if (_winningLines.Contains(line))
+            {
+                continue;
+            }
+
+            _winningLines.Add(line);
+            addedLines++;
+        }
+
+        if (addedLines > 0)
+        {
             string winnerName = currentPlayerIsPrimary ? "Rouge" : "Bleu";
-            MessageBox.Show($"{winnerName} gagne avec 5 points alignes !", "Partie terminee", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(
+                $"{winnerName} aligne 5 points ! Ligne gagnante enregistree. La partie continue.",
+                "Victoire",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
         }
 
         _usePrimaryColorNext = !_usePrimaryColorNext;
@@ -466,16 +503,10 @@ WHERE save_name = @save_name;", connection);
         lblMissilesPrimaryValue.Text = _missilesPrimaryRemaining.ToString();
         lblMissilesSecondaryValue.Text = _missilesSecondaryRemaining.ToString();
 
-        bool missileMode = rdoActionMissile.Checked && !_isGameOver;
+        bool missileMode = rdoActionMissile.Checked;
         numMissileTargetColumn.Enabled = missileMode;
         numMissileTargetRow.Enabled = missileMode;
         btnFireMissile.Enabled = missileMode;
-
-        if (_isGameOver)
-        {
-            lblActionHint.Text = "Partie terminee. Clique sur Recommencer pour rejouer.";
-            return;
-        }
 
         if (rdoActionMissile.Checked)
         {
@@ -489,23 +520,161 @@ WHERE save_name = @save_name;", connection);
             return;
         }
 
-        lblActionHint.Text = "Clique sur une intersection interne pour poser un pion.";
+        lblActionHint.Text = "//";
     }
 
-    private bool HasFiveInRow(Point origin, bool playerColor)
+    private List<WinningLine> GetWinningLines(Point origin, bool playerColor)
     {
-        return CountAligned(origin, 1, 0, playerColor) >= 5
-            || CountAligned(origin, 0, 1, playerColor) >= 5
-            || CountAligned(origin, 1, 1, playerColor) >= 5
-            || CountAligned(origin, 1, -1, playerColor) >= 5;
+        var lines = new List<WinningLine>();
+        (int dx, int dy)[] directions = [(1, 0), (0, 1), (1, 1), (1, -1)];
+
+        foreach ((int dx, int dy) in directions)
+        {
+            Point chainStart = GetChainEdge(origin, -dx, -dy, playerColor);
+            Point chainEnd = GetChainEdge(origin, dx, dy, playerColor);
+            int total = Math.Max(Math.Abs(chainEnd.X - chainStart.X), Math.Abs(chainEnd.Y - chainStart.Y)) + 1;
+
+            if (total < 5)
+            {
+                continue;
+            }
+
+            int originOffset = Math.Max(Math.Abs(origin.X - chainStart.X), Math.Abs(origin.Y - chainStart.Y));
+            int minWindowStart = Math.Max(0, originOffset - 4);
+            int maxWindowStart = Math.Min(originOffset, total - 5);
+
+            for (int startOffset = minWindowStart; startOffset <= maxWindowStart; startOffset++)
+            {
+                Point lineStart = new Point(chainStart.X + (dx * startOffset), chainStart.Y + (dy * startOffset));
+                Point lineEnd = new Point(lineStart.X + (dx * 4), lineStart.Y + (dy * 4));
+                var candidate = new WinningLine(lineStart, lineEnd, dx, dy, playerColor);
+
+                if (WouldExtendExistingWinningLine(candidate))
+                {
+                    continue;
+                }
+
+                lines.Add(candidate);
+            }
+        }
+
+        return lines;
     }
 
-    private int CountAligned(Point origin, int dx, int dy, bool playerColor)
+    private Point GetChainEdge(Point origin, int dx, int dy, bool playerColor)
     {
-        int count = 1;
-        count += CountDirection(origin, dx, dy, playerColor);
-        count += CountDirection(origin, -dx, -dy, playerColor);
-        return count;
+        Point current = origin;
+
+        while (true)
+        {
+            Point next = new Point(current.X + dx, current.Y + dy);
+            if (!_points.TryGetValue(next, out bool nextColor) || nextColor != playerColor)
+            {
+                return current;
+            }
+
+            current = next;
+        }
+    }
+
+    private bool WouldExtendExistingWinningLine(WinningLine candidate)
+    {
+        foreach (WinningLine existing in _winningLines)
+        {
+            if (existing.IsPrimary != candidate.IsPrimary)
+            {
+                continue;
+            }
+
+            if (existing.Dx != candidate.Dx || existing.Dy != candidate.Dy)
+            {
+                continue;
+            }
+
+            int overlap = CountOverlappingPoints(existing, candidate);
+            if (overlap >= 4)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private int CountOverlappingPoints(WinningLine first, WinningLine second)
+    {
+        var points = new HashSet<Point>();
+        for (int i = 0; i < 5; i++)
+        {
+            points.Add(new Point(first.Start.X + (first.Dx * i), first.Start.Y + (first.Dy * i)));
+        }
+
+        int overlap = 0;
+        for (int i = 0; i < 5; i++)
+        {
+            Point p = new Point(second.Start.X + (second.Dx * i), second.Start.Y + (second.Dy * i));
+            if (points.Contains(p))
+            {
+                overlap++;
+            }
+        }
+
+        return overlap;
+    }
+
+    private void RemoveWinningLinesThroughPoint(Point removedPoint)
+    {
+        _winningLines.RemoveAll(line => IsPointOnLineSegment(removedPoint, line));
+    }
+
+    private static bool IsPointOnLineSegment(Point point, WinningLine line)
+    {
+        int vx = point.X - line.Start.X;
+        int vy = point.Y - line.Start.Y;
+
+        if (line.Dx == 0)
+        {
+            if (vx != 0)
+            {
+                return false;
+            }
+
+            int steps = line.End.Y - line.Start.Y;
+            if (steps == 0)
+            {
+                return point == line.Start;
+            }
+
+            int k = vy / line.Dy;
+            return vy % line.Dy == 0 && k >= 0 && k <= Math.Abs(steps);
+        }
+
+        if (line.Dy == 0)
+        {
+            if (vy != 0)
+            {
+                return false;
+            }
+
+            int steps = line.End.X - line.Start.X;
+            int k = vx / line.Dx;
+            return vx % line.Dx == 0 && k >= 0 && k <= Math.Abs(steps);
+        }
+
+        if (vx % line.Dx != 0 || vy % line.Dy != 0)
+        {
+            return false;
+        }
+
+        int kx = vx / line.Dx;
+        int ky = vy / line.Dy;
+        if (kx != ky)
+        {
+            return false;
+        }
+
+        int totalSteps = Math.Abs((line.End.X - line.Start.X) / line.Dx);
+        return kx >= 0 && kx <= totalSteps;
     }
 
     private int CountDirection(Point origin, int dx, int dy, bool playerColor)
@@ -546,7 +715,7 @@ WHERE save_name = @save_name;", connection);
         float cellHeight   = usableHeight / _rows;
 
         // --- Previsualisation du missile (grand cercle sur intersection) ---
-        if (rdoActionMissile.Checked && !_isGameOver)
+        if (rdoActionMissile.Checked)
         {
             int previewCol = ComputeTargetColumn();
             int previewRow = ComputeTargetRow();
@@ -601,6 +770,19 @@ WHERE save_name = @save_name;", connection);
             Brush brush = entry.Value ? primaryBrush : secondaryBrush;
             graphics.FillEllipse(brush, centerX - pointRadius, centerY - pointRadius, pointDiameter, pointDiameter);
         }
+
+        foreach (WinningLine line in _winningLines)
+        {
+            Color lineColor = line.IsPrimary ? Color.Firebrick : Color.RoyalBlue;
+
+            using var winPen = new Pen(lineColor, 3.5f);
+            graphics.DrawLine(
+                winPen,
+                line.Start.X * cellWidth,
+                line.Start.Y * cellHeight,
+                line.End.X * cellWidth,
+                line.End.Y * cellHeight);
+        }
     }
 
     private string GetConnectionString()
@@ -629,4 +811,5 @@ CREATE TABLE IF NOT EXISTS game_saves
     }
 
     private sealed record PointState(int X, int Y, bool IsPrimary);
+    private sealed record WinningLine(Point Start, Point End, int Dx, int Dy, bool IsPrimary);
 }
