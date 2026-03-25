@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("jdPoint")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bde2752c01a4bcfa9a9c25d6e8621dbf88d0a941")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+51f3e0242fc3ddf657c0b2b1bf6d03e986f53b89")]
 [assembly: System.Reflection.AssemblyProductAttribute("jdPoint")]
 [assembly: System.Reflection.AssemblyTitleAttribute("jdPoint")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

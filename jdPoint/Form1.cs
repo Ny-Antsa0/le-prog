@@ -18,6 +18,8 @@ public partial class Form1 : Form
     public Form1()
     {
         InitializeComponent();
+        KeyPreview = true;
+        KeyDown += Form1_KeyDown;
         numColumns.ValueChanged += GridValueChanged;
         numRows.ValueChanged += GridValueChanged;
         pnlGrid.Resize += GridPanelResize;
@@ -79,6 +81,43 @@ public partial class Form1 : Form
     private void MissileTargetChanged(object? sender, EventArgs e)
     {
         pnlGrid.Invalidate();
+    }
+
+    private void Form1_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (!rdoActionMissile.Checked || _isGameOver)
+        {
+            return;
+        }
+
+        // Ne pas intercepter la saisie libre dans le champ de nom de sauvegarde.
+        if (ActiveControl is TextBoxBase)
+        {
+            return;
+        }
+
+        decimal? mappedValue = e.KeyCode switch
+        {
+            Keys.A => 1m,
+            Keys.Z => 2m,
+            Keys.E => 3m,
+            Keys.R => 4m,
+            Keys.T => 5m,
+            Keys.Y => 6m,
+            Keys.U => 7m,
+            Keys.I => 8m,
+            Keys.O => 9m,
+            _ => null
+        };
+
+        if (!mappedValue.HasValue)
+        {
+            return;
+        }
+
+        numMissileTargetColumn.Value = mappedValue.Value;
+        e.Handled = true;
+        e.SuppressKeyPress = true;
     }
 
     private void Form1_Shown(object? sender, EventArgs e)
