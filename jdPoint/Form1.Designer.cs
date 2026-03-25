@@ -43,6 +43,8 @@ partial class Form1
         this.lblPower         = new System.Windows.Forms.Label();
         this.numPower         = new System.Windows.Forms.NumericUpDown();
         this.btnFireMissile   = new System.Windows.Forms.Button();
+        this.lblRowSelector   = new System.Windows.Forms.Label();
+        this.numTargetRow     = new System.Windows.Forms.NumericUpDown();
 
         this.grpGameMode.SuspendLayout();
         this.grpGridSettings.SuspendLayout();
@@ -52,6 +54,7 @@ partial class Form1
         ((System.ComponentModel.ISupportInitialize)(this.numColumns)).BeginInit();
         ((System.ComponentModel.ISupportInitialize)(this.numRows)).BeginInit();
         ((System.ComponentModel.ISupportInitialize)(this.numPower)).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)(this.numTargetRow)).BeginInit();
         this.SuspendLayout();
 
         // ──────────────────────────────────────────────────
@@ -287,31 +290,55 @@ partial class Form1
         this.pnlGrid.MouseClick += new System.Windows.Forms.MouseEventHandler(this.pnlGrid_MouseClick);
 
         // ──────────────────────────────────────────────────
+        // SÉLECTEUR DE LIGNE (à gauche de la grille)
+        // ──────────────────────────────────────────────────
+
+        this.lblRowSelector.Text      = "Ligne :";
+        this.lblRowSelector.Location  = new System.Drawing.Point(12, 540);
+        this.lblRowSelector.Size      = new System.Drawing.Size(50, 20);
+        this.lblRowSelector.Font      = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+        this.lblRowSelector.ForeColor = System.Drawing.Color.White;
+        this.lblRowSelector.BackColor = System.Drawing.Color.FromArgb(0, 100, 200);
+        this.lblRowSelector.TabIndex  = 12;
+        this.lblRowSelector.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+
+        this.numTargetRow.Location = new System.Drawing.Point(70, 538);
+        this.numTargetRow.Size     = new System.Drawing.Size(60, 24);
+        this.numTargetRow.Minimum  = 1;
+        this.numTargetRow.Maximum  = 20;
+        this.numTargetRow.Value    = 1;
+        this.numTargetRow.Font     = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+        this.numTargetRow.TabIndex  = 13;
+        this.numTargetRow.ValueChanged += new System.EventHandler(this.TargetRowChanged);
+
+        // ──────────────────────────────────────────────────
         // FORMULAIRE PRINCIPAL
         // ──────────────────────────────────────────────────
 
         this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
         this.AutoScaleMode       = System.Windows.Forms.AutoScaleMode.Font;
         this.BackColor           = System.Drawing.Color.FromArgb(30, 30, 40);
-        this.ClientSize          = new System.Drawing.Size(1184, 530);
-        this.MinimumSize         = new System.Drawing.Size(700, 400);
-        this.StartPosition       = System.Windows.Forms.FormStartPosition.CenterScreen;
-        this.Text                = "Jeu de points avec missiles";
-        this.Name                = "Form1";
+        this.ClientSize          = new System.Drawing.Size(1184, 570);
 
-        this.Controls.Add(this.grpGameMode);
-        this.Controls.Add(this.grpGridSettings);
-        this.Controls.Add(this.grpGameControls);
-        this.Controls.Add(this.lblCurrentPlayer);
-        this.Controls.Add(this.grpAction);
-        this.Controls.Add(this.grpMissile);
-        this.Controls.Add(this.pnlGrid);
+            ((System.ComponentModel.ISupportInitialize)(this.numColumns)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numRows)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numPower)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numTargetRow)).EndInit();
+            this.grpGameMode.ResumeLayout(false);
+            this.grpGameMode.PerformLayout();
+            this.grpGridSettings.ResumeLayout(false);
+            this.grpGridSettings.PerformLayout();
+            this.grpGameControls.ResumeLayout(false);
+            this.grpGameControls.PerformLayout();
+            this.grpAction.ResumeLayout(false);
+            this.grpAction.PerformLayout();
+            this.grpMissile.ResumeLayout(false);
+            this.grpMissile.PerformLayout();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+        }
 
-        ((System.ComponentModel.ISupportInitialize)(this.numColumns)).EndInit();
-        ((System.ComponentModel.ISupportInitialize)(this.numRows)).EndInit();
-        ((System.ComponentModel.ISupportInitialize)(this.numPower)).EndInit();
-        this.grpGameMode.ResumeLayout(false);
-        this.grpGameMode.PerformLayout();
+        #endregion
         this.grpGridSettings.ResumeLayout(false);
         this.grpGridSettings.PerformLayout();
         this.grpGameControls.ResumeLayout(false);
@@ -351,4 +378,6 @@ partial class Form1
     private System.Windows.Forms.NumericUpDown numPower;
     private System.Windows.Forms.Button btnFireMissile;
     private System.Windows.Forms.Label lblCurrentPlayer;
+    private System.Windows.Forms.Label lblRowSelector;
+    private System.Windows.Forms.NumericUpDown numTargetRow;
 }

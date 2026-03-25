@@ -32,8 +32,27 @@ public partial class Form1 : Form
         rbPvP.CheckedChanged += GameModeChanged;
         rbPvAI.CheckedChanged += GameModeChanged;
         
+        // Activer les raccourcis clavier pour Ctrl+chiffre
+        this.KeyPreview = true;
+        this.KeyDown += Form1_KeyDown;
+        
         UpdateCurrentPlayerDisplay();
         UpdateMissileControls();
+    }
+
+    private void Form1_KeyDown(object? sender, KeyEventArgs e)
+    {
+        // Gérer les raccourcis Ctrl+chiffre pour la puissance du missile
+        if (e.Control && e.KeyCode >= Keys.D1 && e.KeyCode <= Keys.D9)
+        {
+            // Convertir la touche en chiffre (D1=1, D2=2, ..., D9=9)
+            int power = e.KeyCode - Keys.D1 + 1;
+            if (power >= 1 && power <= 9)
+            {
+                numPower.Value = power;
+                e.Handled = true;
+            }
+        }
     }
 
     private void Form1_Shown(object? sender, EventArgs e)
@@ -339,6 +358,11 @@ WHERE save_name = @save_name;", connection);
         UpdateCurrentPlayerDisplay();
     }
 
+    private void TargetRowChanged(object? sender, EventArgs e)
+    {
+        UpdateMissileControls();
+    }
+
     private void MissileParametersChanged(object? sender, EventArgs e)
     {
         UpdateMissileControls();
@@ -371,9 +395,9 @@ WHERE save_name = @save_name;", connection);
         
         if (missileMode)
         {
-            // Calculer automatiquement la ligne cible et la colonne cible
+            // Utiliser la ligne sélectionnée par l'utilisateur et calculer la colonne cible
             int power = (int)numPower.Value;
-            int targetRow = CalculateTargetRow(power, _rows);
+            int targetRow = (int)numTargetRow.Value - 1; // Convertir de 1-20 à 0-19
             int targetColumn = CalculateTargetColumn(power, _columns);
             
             // Afficher les informations calculées
@@ -427,8 +451,8 @@ WHERE save_name = @save_name;", connection);
             return;
 
         int power = (int)numPower.Value;
-        int targetRow = CalculateTargetRow(power, _rows);
-        int targetColumn = CalculateTargetColumn(power, _columns);
+        int targetRow = (int)numTargetRow.Value - 1; // Utiliser la ligne sélectionnée
+        int targetColumn = CalculateTargetColumn(power, _columns); // Utiliser la ligne sélectionnée
 
         // Vérifier que la cible est dans les limites
         if (targetRow < 0 || targetRow >= _rows || targetColumn < 0 || targetColumn >= _columns)
